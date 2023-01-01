@@ -218,6 +218,26 @@ void FFN<
 template<typename OutputLayerType,
          typename InitializationRuleType,
          typename MatType>
+void FFN<
+    OutputLayerType,
+    InitializationRuleType,
+    MatType
+>::Gradient(const MatType& inputs, MatType& gradients) {
+  MatType results, error;
+  Forward(inputs, results);
+
+  error.set_size(results.n_rows, results.n_cols);
+  for (int i = 0; i < results.n_rows; i++) {
+    error(i, 0) = 1.0;
+  }
+  
+  // Perform the backward pass.
+  network.Backward(networkOutput, error, gradients);
+}
+
+template<typename OutputLayerType,
+         typename InitializationRuleType,
+         typename MatType>
 size_t FFN<
     OutputLayerType,
     InitializationRuleType,

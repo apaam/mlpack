@@ -195,6 +195,8 @@ class FFN
                MatType& results,
                const size_t batchSize = 128);
 
+  void Gradient(const MatType& inputs, MatType& gradients);
+
   // Return the number of weights in the model.
   size_t WeightSize();
 
