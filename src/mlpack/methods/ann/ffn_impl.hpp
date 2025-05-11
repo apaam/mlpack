@@ -232,7 +232,8 @@ void FFN<
   }
   
   // Perform the backward pass.
-  network.Backward(networkOutput, error, gradients);
+  networkDelta.set_size(predictors.n_rows, batchSize);
+  network.Backward(networkOutput, error, gradients, networkDelta);
 }
 
 template<typename OutputLayerType,
