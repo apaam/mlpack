@@ -60,9 +60,9 @@ GRU<InputType, OutputType>::GRU(
   network.push_back(hiddenStateModule);
   network.push_back(forgetGateModule);
 
-  prevError = arma::zeros<OutputType>(3 * outSize, batchSize);
+  prevError = zeros<OutputType>(3 * outSize, batchSize);
 
-  allZeros = arma::zeros<OutputType>(outSize, batchSize);
+  allZeros = zeros<OutputType>(outSize, batchSize);
 
   outParameter.emplace_back(allZeros.memptr(),
       allZeros.n_rows, allZeros.n_cols, false, true);
@@ -108,11 +108,11 @@ void GRU<InputType, OutputType>::Forward(
       batchSize - 1) + output2GateModule->OutputParameter();
 
   // Pass the first outSize through inputGate(it).
-  inputGateModule->Forward(output.submat( 0, 0, 1 * outSize - 1, batchSize - 1),
+  inputGateModule->Forward(output.submat(0, 0, 1 * outSize - 1, batchSize - 1),
       inputGateModule->OutputParameter());
 
   // Pass the second through forgetGate.
-  forgetGateModule->Forward(output.submat( 1 * outSize, 0, 2 * outSize - 1,
+  forgetGateModule->Forward(output.submat(1 * outSize, 0, 2 * outSize - 1,
       batchSize - 1), forgetGateModule->OutputParameter());
 
   OutputType modInput = forgetGateModule->OutputParameter() % *prevOutput;
@@ -220,7 +220,7 @@ void GRU<InputType, OutputType>::Backward(
       hiddenStateModule->OutputParameter());
 
   // Delta ot.
-  OutputType dOt = gyLocal % (arma::ones<OutputType>(outSize, batchSize) -
+  OutputType dOt = gyLocal % (ones<OutputType>(outSize, batchSize) -
       inputGateModule->OutputParameter());
 
   // Delta of input gate.

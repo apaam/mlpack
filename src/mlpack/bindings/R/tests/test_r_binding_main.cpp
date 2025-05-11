@@ -195,7 +195,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
   // All numeric elements should be multiplied by 3.
   if (params.Has("matrix_and_info_in"))
   {
-    typedef tuple<data::DatasetInfo, arma::mat> TupleType;
+    using TupleType = tuple<data::DatasetInfo, arma::mat>;
     TupleType tuple = std::move(params.Get<TupleType>("matrix_and_info_in"));
 
     const data::DatasetInfo& di = std::get<0>(tuple);
@@ -237,4 +237,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& /* timers */)
     params.Get<double>("model_bw_out") =
         params.Get<GaussianKernel*>("model_in")->Bandwidth() * 2.0;
   }
+
+  // Provide some output if the user asked for it.
+  Log::Info << "Here is some verbose output!" << std::endl;
 }

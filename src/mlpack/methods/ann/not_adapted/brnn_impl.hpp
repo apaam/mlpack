@@ -78,9 +78,9 @@ template<typename OutputLayerType, typename MergeLayerType,
          typename MergeOutputType, typename InitializationRuleType,
          typename... CustomLayers>
 template<typename OptimizerType>
-typename std::enable_if<
+std::enable_if_t<
       HasMaxIterations<OptimizerType, size_t&(OptimizerType::*)()>
-      ::value, void>::type
+      ::value, void>
 BRNN<OutputLayerType, MergeLayerType, MergeOutputType,
     InitializationRuleType, CustomLayers...>::WarnMessageMaxIterations
 (OptimizerType& optimizer, size_t samples) const
@@ -102,9 +102,9 @@ template<typename OutputLayerType, typename MergeLayerType,
          typename MergeOutputType, typename InitializationRuleType,
          typename... CustomLayers>
 template<typename OptimizerType>
-typename std::enable_if<
+std::enable_if_t<
       !HasMaxIterations<OptimizerType, size_t&(OptimizerType::*)()>
-      ::value, void>::type
+      ::value, void>
 BRNN<OutputLayerType, MergeLayerType, MergeOutputType,
     InitializationRuleType, CustomLayers...>::WarnMessageMaxIterations
 (OptimizerType& /* optimizer */, size_t /* samples */) const
@@ -201,13 +201,13 @@ void BRNN<OutputLayerType, MergeLayerType, MergeOutputType,
     ResetParameters();
   }
 
-  if (std::is_same<MergeLayerType, Concat<>>::value)
+  if (std::is_same_v<MergeLayerType, Concat<>>)
   {
-    results = arma::zeros<arma::cube>(outputSize * 2, predictors.n_cols, rho);
+    results = zeros<arma::cube>(outputSize * 2, predictors.n_cols, rho);
   }
   else
   {
-    results = arma::zeros<arma::cube>(outputSize, predictors.n_cols, rho);
+    results = zeros<arma::cube>(outputSize, predictors.n_cols, rho);
   }
 
   std::vector<arma::mat> results1, results2;
@@ -375,7 +375,7 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
     {
       ResetParameters();
     }
-    gradient = arma::zeros<arma::mat>(parameter.n_rows, parameter.n_cols);
+    gradient = zeros<arma::mat>(parameter.n_rows, parameter.n_cols);
   }
   else
   {
@@ -384,12 +384,8 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
 
   if (backwardGradient.is_empty())
   {
-    backwardGradient = arma::zeros<arma::mat>(
-        parameter.n_rows/ 2,
-        parameter.n_cols);
-    forwardGradient = arma::zeros<arma::mat>(
-        parameter.n_rows/ 2,
-        parameter.n_cols);
+    backwardGradient = zeros<arma::mat>(parameter.n_rows / 2, parameter.n_cols);
+    forwardGradient = zeros<arma::mat>(parameter.n_rows / 2, parameter.n_cols);
   }
   if (this->deterministic)
   {
@@ -442,13 +438,13 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
   }
 
   arma::cube results;
-  if (std::is_same<MergeLayerType, Concat<>>::value)
+  if (std::is_same_v<MergeLayerType, Concat<>>)
   {
-    results = arma::zeros<arma::cube>(outputSize * 2, batchSize, rho);
+    results = zeros<arma::cube>(outputSize * 2, batchSize, rho);
   }
   else
   {
-    results = arma::zeros<arma::cube>(outputSize, batchSize, rho);
+    results = zeros<arma::cube>(outputSize, batchSize, rho);
   }
 
   double performance = 0;

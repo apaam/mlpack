@@ -54,9 +54,9 @@ class AxisParallelProjVector
    * @param bound Bound to be projected.
    * @return Range of projected values.
    */
-  template<typename MetricType, typename ElemType>
+  template<typename DistanceType, typename ElemType>
   RangeType<ElemType> Project(
-      const HRectBound<MetricType, ElemType>& bound) const
+      const HRectBound<DistanceType, ElemType>& bound) const
   {
     return bound[dim];
   }
@@ -67,9 +67,9 @@ class AxisParallelProjVector
    * @param bound Bound to be projected.
    * @return Range of projected values.
    */
-  template<typename MetricType, typename VecType>
-  RangeType<typename VecType::elem_type> Project(
-      const BallBound<MetricType, VecType>& bound) const
+  template<typename DistanceType, typename ElemType, typename VecType>
+  RangeType<ElemType> Project(
+      const BallBound<DistanceType, ElemType, VecType>& bound) const
   {
     return bound[dim];
   }
@@ -88,17 +88,18 @@ class AxisParallelProjVector
  * ProjVector defines a general projection vector (not necessarily
  * axis-parallel).
  */
+template<typename MatType = arma::mat>
 class ProjVector
 {
-  //! Projection vector.
-  arma::vec projVect;
+  using ProjVecType = typename GetColType<MatType>::type;
+
+  ProjVecType projVect;
 
  public:
   /**
    * Empty Constructor.
    */
-  ProjVector() :
-      projVect()
+  ProjVector() : projVect()
   {};
 
   /**
@@ -106,8 +107,8 @@ class ProjVector
    *
    * @param vect Vector to be considered.
    */
-  ProjVector(const arma::vec& vect) :
-      projVect(arma::normalise(vect))
+  ProjVector(const ProjVecType& vect) :
+      projVect(normalise(vect))
   {};
 
   /**
@@ -119,7 +120,7 @@ class ProjVector
   double Project(const VecType& point,
                  typename std::enable_if_t<IsVector<VecType>::value>* = 0) const
   {
-    return arma::dot(point, projVect);
+    return dot(point, projVect);
   }
 
   /**
@@ -128,11 +129,10 @@ class ProjVector
    * @param bound Bound to be projected.
    * @return Range of projected values.
    */
-  template<typename MetricType, typename VecType>
-  RangeType<typename VecType::elem_type> Project(
-      const BallBound<MetricType, VecType>& bound) const
+  template<typename DistanceType, typename ElemType, typename VecType>
+  RangeType<ElemType> Project(
+      const BallBound<DistanceType, ElemType, VecType>& bound) const
   {
-    typedef typename VecType::elem_type ElemType;
     const double center = Project(bound.Center());
     const ElemType radius = bound.Radius();
     return RangeType<ElemType>(center - radius, center + radius);

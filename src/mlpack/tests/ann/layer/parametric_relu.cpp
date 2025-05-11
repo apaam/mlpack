@@ -20,33 +20,32 @@
 using namespace mlpack;
 
 /**
- * PReLU FORWARD Test.
+ * PReLU forward pass test.
  */
-TEST_CASE("PReLUFORWARDTest", "[ANNLayerTest]")
+TEST_CASE("PReLUForwardTest", "[ANNLayerTest]")
 {
   arma::mat input = {{0.5, 1.2, 3.1},
                     {-2.2, -1.5, 0.8},
                     {5.5, -4.7, 2.1},
                     {0.2, 0.1, -0.5}};
   PReLU module(0.01);
-  module.Training() = true;
   arma::mat moduleParams(module.WeightSize(), 1);
   module.CustomInitialize(moduleParams, module.WeightSize());
-  module.SetWeights((double*) moduleParams.memptr());
+  module.SetWeights(moduleParams);
   arma::mat predOutput;
   module.Forward(input, predOutput);
   arma::mat actualOutput = {{0.5, 1.2, 3.1},
                            {-0.022, -0.015, 0.8},
                            {5.5, -0.047, 2.1},
                            {0.2, 0.1, -0.005}};
-  REQUIRE(arma::accu(arma::abs(actualOutput - predOutput)) ==
+  REQUIRE(accu(arma::abs(actualOutput - predOutput)) ==
       Approx(0.0).margin(1e-4));
 }
 
 /**
- * PReLU BACKWARD Test.
+ * PReLU backward pass Test.
  */
-TEST_CASE("PReLUBACKWARDTest", "[ANNLayerTest]")
+TEST_CASE("PReLUBackwardTest", "[ANNLayerTest]")
 {
   arma::mat input = {{0.5, 1.2, 3.1},
                     {-2.2, -1.5, 0.8},
@@ -55,26 +54,28 @@ TEST_CASE("PReLUBACKWARDTest", "[ANNLayerTest]")
   PReLU module(0.01);
   arma::mat moduleParams(module.WeightSize(), 1);
   module.CustomInitialize(moduleParams, module.WeightSize());
-  module.SetWeights((double*) moduleParams.memptr());
+  module.SetWeights(moduleParams);
   arma::mat gy = {{0.2, -0.5, 0.8},
                  {1.5, -0.6, 0.1},
                  {-0.3, 0.2, -0.5},
                  {0.1, -0.1, 0.3}};
   arma::mat predG;
-  module.Backward(input, gy, predG);
+  arma::mat output;
+  module.Forward(input, output);
+  module.Backward(input, output, gy, predG);
   arma::mat actualG = {{0.2, -0.5, 0.8},
                       {0.015, -0.006, 0.1},
                       {-0.3, 0.002, -0.5},
                       {0.1, -0.1, 0.0030}};
 
-  REQUIRE(arma::accu(arma::abs(actualG - predG)) ==
+  REQUIRE(accu(arma::abs(actualG - predG)) ==
       Approx(0.0).margin(1e-4));
 }
 
 /**
- * PReLU GRADIENT Test.
+ * PReLU gradient pass test.
  */
-TEST_CASE("PReLUGRADIENTTest", "[ANNLayerTest]")
+TEST_CASE("PReLUGradientTest", "[ANNLayerTest]")
 {
   arma::mat input = {{0.5, 1.2, 3.1},
                     {-2.2, -1.5, 0.8},
@@ -83,7 +84,7 @@ TEST_CASE("PReLUGRADIENTTest", "[ANNLayerTest]")
   PReLU module(0.01);
   arma::mat moduleParams(module.WeightSize(), 1);
   module.CustomInitialize(moduleParams, module.WeightSize());
-  module.SetWeights((double*) moduleParams.memptr());
+  module.SetWeights(moduleParams);
   arma::mat error = {{0.2, -0.5,  0.8},
                     {-0.015, -0.006, 0.001},
                     {-0.3,  0.002, -0.005},
@@ -91,6 +92,56 @@ TEST_CASE("PReLUGRADIENTTest", "[ANNLayerTest]")
   arma::mat predGradient;
   module.Gradient(input, error, predGradient);
 
-  REQUIRE(0.0103 - arma::accu(predGradient) ==
+  REQUIRE(0.0103 - accu(predGradient) ==
       Approx(0.0).margin(1e-4));
 }
+
+double ComputeMSRE(arma::mat input, arma::mat target)
+{
+  return std::pow(accu(pow(input - target, 2)) / target.n_cols, 0.5);
+}
+
+TEST_CASE("PReLUIntegrationTest", "[ANNLayerTest]")
+{
+  arma::mat data;
+  data::Load("boston_housing_price.csv", data, true /* fatal */);
+  arma::mat labels;
+  data::Load("boston_housing_price_responses.csv", labels, true /* fatal */);
+
+  // Sometimes the model may not optimize correctly, so we allow a few trials.
+  bool success = false;
+  for (size_t trial = 0; trial < 5; ++trial)
+  {
+    arma::mat trainData, testData, trainLabels, testLabels;
+    data::Split(data, labels, trainData, testData, trainLabels, testLabels,
+        0.2);
+
+    FFN<L1Loss> model;
+    model.Add<Linear>(10);
+    model.Add<PReLU>(0.01);
+    model.Add<Linear>(3);
+    model.Add<PReLU>(0.01);
+    model.Add<Linear>(1);
+
+    const size_t epochs = 500;
+    ens::RMSProp optimizer(0.0025, 8, 0.99, 1e-8, epochs * trainData.n_cols);
+    model.Reset(data.n_rows);
+    model.Train(trainData, trainLabels, optimizer);
+
+    arma::mat predictions;
+    model.Predict(trainData, predictions);
+    double msreTrain = ComputeMSRE(predictions, trainLabels);
+    model.Predict(testData, predictions);
+    double msreTest = ComputeMSRE(predictions, testLabels);
+
+    double relativeMSRE = std::abs((msreTest - msreTrain) / msreTrain);
+    if (relativeMSRE <= 0.35)
+    {
+      success = true;
+      break;
+    }
+  }
+
+  REQUIRE(success == true);
+}
+

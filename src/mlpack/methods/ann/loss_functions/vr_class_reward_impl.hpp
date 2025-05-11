@@ -16,6 +16,8 @@
 // In case it hasn't yet been included.
 #include "vr_class_reward.hpp"
 
+#include <mlpack/core/util/log.hpp>
+
 namespace mlpack {
 
 template<typename MatType>
@@ -47,7 +49,7 @@ typename MatType::elem_type VRClassRewardType<MatType>::Forward(
 
   for (size_t i = 0; i < input.n_cols - 1; ++i)
   {
-    input.unsafe_col(i).max(index);
+    index = input.unsafe_col(i).index_max();
     reward = (index == target(i)) * scale;
   }
 
@@ -65,7 +67,7 @@ void VRClassRewardType<MatType>::Backward(
     const MatType& target,
     MatType& output)
 {
-  output = arma::zeros<MatType>(input.n_rows, input.n_cols);
+  output = zeros<MatType>(input.n_rows, input.n_cols);
   for (size_t i = 0; i < (input.n_cols - 1); ++i)
   {
     const size_t currentTarget = target(i);

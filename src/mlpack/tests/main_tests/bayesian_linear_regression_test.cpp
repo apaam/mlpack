@@ -33,7 +33,7 @@ TEST_CASE_METHOD(BRTestFixture,
   int n = 50, m = 4;
   arma::mat matX = arma::randu<arma::mat>(m, n);
   arma::rowvec omega = arma::randu<arma::rowvec>(m);
-  arma::rowvec y =  omega * matX;
+  arma::rowvec y = omega * matX;
 
   SetInputParam("input", std::move(matX));
   SetInputParam("responses", std::move(y));
@@ -41,8 +41,8 @@ TEST_CASE_METHOD(BRTestFixture,
 
   RUN_BINDING();
 
-  BayesianLinearRegression* estimator =
-      params.Get<BayesianLinearRegression*>("output_model");
+  BayesianLinearRegression<>* estimator =
+      params.Get<BayesianLinearRegression<>*>("output_model");
 
   REQUIRE(estimator->DataOffset().n_elem == 0);
   REQUIRE(estimator->DataScale().n_elem == 0);
@@ -59,9 +59,9 @@ TEST_CASE_METHOD(BRTestFixture,
   arma::mat matX = arma::randu<arma::mat>(m, n);
   arma::mat matXtest = arma::randu<arma::mat>(m, 2 * n);
   const arma::rowvec omega = arma::randu<arma::rowvec>(m);
-  arma::rowvec y =  omega * matX;
+  arma::rowvec y = omega * matX;
 
-  BayesianLinearRegression model;
+  BayesianLinearRegression<> model;
   model.Train(matX, y);
 
   arma::rowvec responses;
@@ -72,8 +72,8 @@ TEST_CASE_METHOD(BRTestFixture,
 
   RUN_BINDING();
 
-  BayesianLinearRegression* mOut =
-      params.Get<BayesianLinearRegression*>("output_model");
+  BayesianLinearRegression<>* mOut =
+      params.Get<BayesianLinearRegression<>*>("output_model");
 
   ResetSettings();
 
@@ -99,9 +99,9 @@ TEST_CASE_METHOD(BRTestFixture,
   arma::mat matX = arma::randu<arma::mat>(m, n);
   arma::mat matXtest = arma::randu<arma::mat>(m, 2 * n);
   const arma::rowvec omega = arma::randu<arma::rowvec>(m);
-  arma::rowvec y =  omega * matX;
+  arma::rowvec y = omega * matX;
 
-  BayesianLinearRegression model;
+  BayesianLinearRegression<> model;
   model.Train(matX, y);
 
   arma::rowvec responses;
@@ -121,7 +121,7 @@ TEST_CASE_METHOD(BRTestFixture,
   // An error should occur.
   SetInputParam("input", std::move(matX));
   SetInputParam("input_model",
-                params.Get<BayesianLinearRegression*>("output_model"));
+                params.Get<BayesianLinearRegression<>*>("output_model"));
   SetInputParam("test", std::move(matXtest));
 
   REQUIRE_THROWS_AS(RUN_BINDING(), std::runtime_error);

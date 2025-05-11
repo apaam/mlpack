@@ -58,7 +58,9 @@ LinearNoBiasType<MatType, RegularizerType>::LinearNoBiasType(
     outSize(0),
     regularizer(std::move(layer.regularizer))
 {
-  // Nothing to do here.
+  // Reset parameters of other layer.
+  layer.inSize = 0;
+  layer.outSize = 0;
 }
 
 template<typename MatType, typename RegularizerType>
@@ -88,6 +90,10 @@ LinearNoBiasType<MatType, RegularizerType>::operator=(
     inSize = std::move(layer.inSize);
     outSize = std::move(layer.outSize);
     regularizer = std::move(layer.regularizer);
+
+    // Reset parameters of other layer.
+    layer.inSize = 0;
+    layer.outSize = 0;
   }
 
   return *this;
@@ -95,9 +101,9 @@ LinearNoBiasType<MatType, RegularizerType>::operator=(
 
 template<typename MatType, typename RegularizerType>
 void LinearNoBiasType<MatType, RegularizerType>::SetWeights(
-    typename MatType::elem_type* weightsPtr)
+    const MatType& weights)
 {
-  MakeAlias(weight, weightsPtr, outSize, inSize);
+  MakeAlias(weight, weights, outSize, inSize);
 }
 
 template<typename MatType, typename RegularizerType>
@@ -109,7 +115,10 @@ void LinearNoBiasType<MatType, RegularizerType>::Forward(
 
 template<typename MatType, typename RegularizerType>
 void LinearNoBiasType<MatType, RegularizerType>::Backward(
-    const MatType& /* input */, const MatType& gy, MatType& g)
+    const MatType& /* input */,
+    const MatType& /* output */,
+    const MatType& gy,
+    MatType& g)
 {
   g = weight.t() * gy;
 }
@@ -120,8 +129,7 @@ void LinearNoBiasType<MatType, RegularizerType>::Gradient(
     const MatType& error,
     MatType& gradient)
 {
-  gradient.submat(0, 0, weight.n_elem - 1, 0) = arma::vectorise(
-      error * input.t());
+  gradient.submat(0, 0, weight.n_elem - 1, 0) = vectorise(error * input.t());
   regularizer.Evaluate(weight, gradient);
 }
 

@@ -15,6 +15,8 @@
 // In case it hasn't been included yet.
 #include "spatial_dropout.hpp"
 
+#include <mlpack/core/util/log.hpp>
+
 namespace mlpack {
 
 template<typename InputType, typename OutputType>
@@ -47,8 +49,8 @@ template<typename InputType, typename OutputType>
 void SpatialDropoutType<InputType, OutputType>::Forward(
     const InputType& input, OutputType& output)
 {
-  Log::Assert(input.n_rows % size == 0, "Input features must be divisible \
-      by feature maps.");
+  Log::Assert(input.n_rows % size == 0, "Input features must be divisible "
+      "by feature maps.");
 
   if (!reset)
   {
@@ -75,7 +77,7 @@ void SpatialDropoutType<InputType, OutputType>::Forward(
     probabilities.fill(ratio);
     BernoulliDistribution<> bernoulli_dist(probabilities, false);
     maskRow = bernoulli_dist.Sample();
-    mask = arma::repmat(maskRow, inputSize, 1);
+    mask = repmat(maskRow, inputSize, 1);
 
     for (size_t n = 0; n < batchSize; n++)
       outputTemp.slice(n) = inputTemp.slice(n) % mask * scale;

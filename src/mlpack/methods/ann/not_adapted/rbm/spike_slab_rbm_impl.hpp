@@ -25,7 +25,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::Reset()
 {
   size_t shape = (visibleSize * hiddenSize * poolSize) + visibleSize +
@@ -65,18 +65,18 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, double>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, double>
 RBM<InitializationRuleType, DataType, PolicyType>::FreeEnergy(
     const arma::Mat<ElemType>& input)
 {
-  ElemType freeEnergy = 0.5 * visiblePenalty(0) * arma::dot(input, input);
+  ElemType freeEnergy = 0.5 * visiblePenalty(0) * dot(input, input);
 
   freeEnergy -= 0.5 * hiddenSize * poolSize *
       std::log((2.0 * M_PI) / slabPenalty);
 
   for (size_t i = 0; i < hiddenSize; ++i)
   {
-    ElemType sum = arma::accu(arma::square(input.t() * weight.slice(i))) /
+    ElemType sum = accu(square(input.t() * weight.slice(i))) /
         (2.0 * slabPenalty);
     freeEnergy -= SoftplusFunction::Fn(spikeBias(i) - sum);
   }
@@ -90,7 +90,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::Phase(
     const InputType& input,
     DataType& gradient)
@@ -107,13 +107,13 @@ RBM<InitializationRuleType, DataType, PolicyType>::Phase(
 
   for (size_t i = 0 ; i < hiddenSize; ++i)
   {
-    weightGrad.slice(i) = input * arma::repmat(slabMean.col(i).t(),
+    weightGrad.slice(i) = input * repmat(slabMean.col(i).t(),
         input.n_cols, 1) * spikeMean(i);
   }
 
   spikeBiasGrad = spikeMean;
   // Setting visiblePenaltyGrad.
-  gradient.row(weightGrad.n_elem + spikeBiasGrad.n_elem) = -0.5 * arma::dot(
+  gradient.row(weightGrad.n_elem + spikeBiasGrad.n_elem) = -0.5 * dot(
        input, input) / std::pow(input.n_cols, 2);
 }
 
@@ -123,7 +123,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::SampleHidden(
     const arma::Mat<ElemType>& input,
     arma::Mat<ElemType>& output)
@@ -146,7 +146,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::SampleVisible(
     arma::Mat<ElemType>& input,
     arma::Mat<ElemType>& output)
@@ -163,7 +163,7 @@ RBM<InitializationRuleType, DataType, PolicyType>::SampleVisible(
     {
       output(i) = RandNormal(visibleMean(i), 1.0 / visiblePenalty(0));
     }
-    if (arma::norm(output, 2) < radius)
+    if (norm(output, 2) < radius)
     {
       break;
     }
@@ -172,7 +172,7 @@ RBM<InitializationRuleType, DataType, PolicyType>::SampleVisible(
   if (k == numMaxTrials)
   {
     Log::Warn << "Outputs are still not in visible unit "
-        << arma::norm(output, 2)
+        << norm(output, 2)
         << " terminating optimization."
         << std::endl;
   }
@@ -184,7 +184,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::VisibleMean(
     InputType& input,
     DataType& output)
@@ -209,7 +209,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::HiddenMean(
     const InputType& input,
     DataType& output)
@@ -231,14 +231,14 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::SpikeMean(
     const InputType& visible,
     DataType& spikeMean)
 {
   for (size_t i = 0; i < hiddenSize; ++i)
   {
-    spikeMean(i) = LogisticFunction::Fn(0.5 * (1.0 / slabPenalty) * arma::accu(
+    spikeMean(i) = LogisticFunction::Fn(0.5 * (1.0 / slabPenalty) * accu(
         visible.t() * (weight.slice(i) * weight.slice(i).t()) * visible)
         / std::pow(visible.n_cols, 2) + spikeBias(i));
   }
@@ -250,7 +250,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::SampleSpike(
     InputType& spikeMean,
     DataType& spike)
@@ -267,7 +267,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::SlabMean(
     const DataType& visible,
     DataType& spike,
@@ -286,7 +286,7 @@ template<
   typename PolicyType
 >
 template<typename Policy, typename InputType>
-typename std::enable_if<std::is_same<Policy, SpikeSlabRBM>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, SpikeSlabRBM>, void>
 RBM<InitializationRuleType, DataType, PolicyType>::SampleSlab(
     InputType& slabMean,
     DataType& slab)

@@ -22,16 +22,14 @@ namespace util {
 // Utility functions to correctly handle transposed Armadillo matrices.
 template<typename T>
 inline void TransposeIfNeeded(
-    const std::string& identifier,
-    T& value,
-    bool transpose)
+    T& /* value */,
+    bool /* transpose */)
 {
   // No transpose needed for non-matrices.
   return;
 }
 
 inline void TransposeIfNeeded(
-    const std::string& identifier,
     arma::mat& value,
     bool transpose)
 {
@@ -59,7 +57,7 @@ inline void SetParam(util::Params& params,
                      T& value,
                      bool transpose = false)
 {
-  TransposeIfNeeded(identifier, value, transpose);
+  TransposeIfNeeded(value, transpose);
   params.Get<T>(identifier) = std::move(value);
 }
 
@@ -91,8 +89,8 @@ inline void SetParamWithInfo(util::Params& params,
                              T& matrix,
                              const bool* dims)
 {
-  typedef typename std::tuple<data::DatasetInfo, T> TupleType;
-  typedef typename T::elem_type eT;
+  using TupleType = std::tuple<data::DatasetInfo, T>;
+  using eT = typename T::elem_type;
 
   // The true type of the parameter is std::tuple<T, DatasetInfo>.
   const size_t dimensions = matrix.n_rows;
@@ -151,7 +149,7 @@ T& GetParamWithInfo(util::Params& params,
                     const std::string& paramName)
 {
   // T will be the Armadillo type.
-  typedef std::tuple<data::DatasetInfo, T> TupleType;
+  using TupleType = std::tuple<data::DatasetInfo, T>;
   return std::get<1>(params.Get<TupleType>(paramName));
 }
 

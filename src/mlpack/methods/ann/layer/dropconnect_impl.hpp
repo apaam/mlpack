@@ -114,7 +114,7 @@ void DropConnectType<MatType>::Forward(const MatType& input, MatType& output)
 
     // Scale with input / (1 - ratio) and set values to zero with
     // probability ratio.
-    mask = arma::randu<MatType>(denoise.n_rows, denoise.n_cols);
+    mask.randu(denoise.n_rows, denoise.n_cols);
     mask.transform([&](double val) { return (val > ratio); });
 
     baseLayer->Parameters() = denoise % mask;
@@ -127,10 +127,11 @@ void DropConnectType<MatType>::Forward(const MatType& input, MatType& output)
 template<typename MatType>
 void DropConnectType<MatType>::Backward(
     const MatType& input,
+    const MatType& output,
     const MatType& gy,
     MatType& g)
 {
-  baseLayer->Backward(input, gy, g);
+  baseLayer->Backward(input, output, gy, g);
 }
 
 template<typename MatType>
@@ -154,10 +155,9 @@ void DropConnectType<MatType>::ComputeOutputDimensions()
 }
 
 template<typename MatType>
-void DropConnectType<MatType>::SetWeights(
-    typename MatType::elem_type* weightsPtr)
+void DropConnectType<MatType>::SetWeights(const MatType& weightsIn)
 {
-  baseLayer->SetWeights(weightsPtr);
+  baseLayer->SetWeights(weightsIn);
 }
 
 template<typename MatType>

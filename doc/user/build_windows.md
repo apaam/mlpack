@@ -36,8 +36,8 @@ an existing one). The library is immediately ready to be included
 (via preprocessor directives) and used in your project without additional
 configuration.
 
-Note that when building mlpack, the `/std:c++17` and `/Zc:__cplusplus` options
-are required for Visual Studio.
+Note that when building mlpack, the `/std:c++17` option is required for Visual
+Studio.
 
 ## Build Environment
 
@@ -94,7 +94,7 @@ OpenBLAS with LLVM's `clang-cl` and `flang` to produce the required static
 library (`.lib`) files 
 compatible with the MSVC compiler. A comprehensive guide on the
 compilation of OpenBLAS for Windows can be found
-[here](https://github.com/xianyi/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio).
+[here](https://github.com/OpenMathLib/OpenBLAS/wiki/How-to-use-OpenBLAS-in-Microsoft-Visual-Studio).
 
 One could always download prebuilt `LAPACK` and `BLAS` libraries for Windows.
 However, there are few official sources, and some of those libraries may require
@@ -109,7 +109,7 @@ project.
 ### Armadillo Dependency
 
 - Download the newest version of Armadillo from
-  [Sourceforge](http://arma.sourceforge.net/download.html)
+  [Sourceforge](https://arma.sourceforge.net/download.html)
 - Unzip to `C:\mlpack\armadillo`
 - Create a `build` directory into `C:\mlpack\armadillo\`
 - Open the Command Prompt and navigate to `C:\mlpack\armadillo\build`
@@ -139,7 +139,7 @@ compiler and Windows SDK are installed correctly.
 - Run cmake:
 
 ```
-cmake -G "Visual Studio 16 2019" -A x64 -DBLAS_LIBRARIES:FILEPATH="C:/mlpack/mlpack/packages/OpenBLAS.0.2.14.1/lib/native/lib/x64/libopenblas.dll.a" -DLAPACK_LIBRARIES:FILEPATH="C:/mlpack/mlpack/packages/OpenBLAS.0.2.14.1/lib/native/lib/x64/libopenblas.dll.a" -DARMADILLO_INCLUDE_DIR="C:/mlpack/armadillo/include" -DARMADILLO_LIBRARY:FILEPATH="C:/mlpack/armadillo/build/Debug/armadillo.lib" -DDEBUG=OFF -DPROFILE=OFF ..
+cmake -G "Visual Studio 16 2019" -A x64 -DBLAS_LIBRARIES:FILEPATH="C:/mlpack/mlpack/packages/OpenBLAS.0.2.14.1/lib/native/lib/x64/libopenblas.dll.a" -DLAPACK_LIBRARIES:FILEPATH="C:/mlpack/mlpack/packages/OpenBLAS.0.2.14.1/lib/native/lib/x64/libopenblas.dll.a" -DARMADILLO_INCLUDE_DIR="C:/mlpack/armadillo/include" -DARMADILLO_LIBRARY:FILEPATH="C:/mlpack/armadillo/build/Debug/armadillo.lib" ..
 ```
 
 *Note*: CMake will attempt to automatically download the ensmallen dependency.
@@ -155,14 +155,14 @@ manually download ensmallen from http://ensmallen.org/ and extract it to
   `C:\mlpack\mlpack\build\Debug` (or `C:\mlpack\mlpack\build\Release` if you
   changed to Release mode)
 
-You are ready to create your first application; take a look at the
-[Sample C++ ML App](sample_ml_app.md).
+You are ready to create your first application; take a look at
+[Deploying mlpack on Windows](deploy_windows.md).
 
 ## Building mlpack with Visual Studio's CMake integration
 
 This project can be directly built from the `CMakeLists.txt` with the latest
 version of MS Visual Studio, given you have CMake integration via the
-[C++ CMake tools for Windows](https://docs.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-160).
+[C++ CMake tools for Windows](https://learn.microsoft.com/en-us/cpp/build/cmake-projects-in-visual-studio?view=msvc-160).
 To open the CMake project with Visual Studio, select File -> Open -> CMake in
 the top menu, followed by selecting the root `CMakeLists.txt` located in
 mlpack's root directory.
@@ -261,5 +261,5 @@ If you are facing issues during the build process of mlpack, you may take a look
 at other third-party tutorials for Windows, but they may be out of date:
 
  * [Github wiki Windows Build page](https://github.com/mlpack/mlpack/wiki/WindowsBuild)
- * [Keon's tutorial for mlpack 2.0.3](http://keon.io/mlpack-on-windows)
+ * [Keon's tutorial for mlpack 2.0.3](https://keon.github.io/mlpack-on-windows/)
  * [Kirizaki's tutorial for mlpack 2](https://overdosedblog.wordpress.com/2016/08/15/once_again/)

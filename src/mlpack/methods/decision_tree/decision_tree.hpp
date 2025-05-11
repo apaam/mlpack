@@ -15,19 +15,9 @@
 
 #include <mlpack/core.hpp>
 
-#include "gini_gain.hpp"
-#include "information_gain.hpp"
-#include "mad_gain.hpp"
-#include "mse_gain.hpp"
-
-#include "best_binary_numeric_split.hpp"
-#include "random_binary_numeric_split.hpp"
-
-#include "all_categorical_split.hpp"
-
-#include "all_dimension_select.hpp"
-#include "random_dimension_select.hpp"
-#include "multiple_random_dimension_select.hpp"
+#include "fitness_functions/fitness_functions.hpp"
+#include "splits/splits.hpp"
+#include "select_functions/select_functions.hpp"
 
 namespace mlpack {
 
@@ -49,11 +39,11 @@ class DecisionTree :
 {
  public:
   //! Allow access to the numeric split type.
-  typedef NumericSplitType<FitnessFunction> NumericSplit;
+  using NumericSplit = NumericSplitType<FitnessFunction>;
   //! Allow access to the categorical split type.
-  typedef CategoricalSplitType<FitnessFunction> CategoricalSplit;
+  using CategoricalSplit = CategoricalSplitType<FitnessFunction>;
   //! Allow access to the dimension selection type.
-  typedef DimensionSelectionType DimensionSelection;
+  using DimensionSelection = DimensionSelectionType;
 
   /**
    * Construct the decision tree on the given data and labels, where the data
@@ -140,7 +130,38 @@ class DecisionTree :
       const size_t maximumDepth = 0,
       DimensionSelectionType dimensionSelector = DimensionSelectionType(),
       const std::enable_if_t<arma::is_arma_type<
-          typename std::remove_reference<WeightsType>::type>::value>* = 0);
+          std::remove_reference_t<WeightsType>>::value>* = 0);
+
+  /**
+   * Construct the decision tree on the given data and labels with weights,
+   * assuming that the data is all of the numeric type. Setting minimumLeafSize
+   * and minimumGainSplit too small may cause the tree to overfit, but setting
+   * them too large may cause it to underfit.
+   *
+   * Use std::move if data, labels or weights are no longer needed to avoid
+   * copies.
+   *
+   * @param data Dataset to train on.
+   * @param labels Labels for each training point.
+   * @param numClasses Number of classes in the dataset.
+   * @param weights The weight list of given label.
+   * @param minimumLeafSize Minimum number of points in each leaf node.
+   * @param minimumGainSplit Minimum gain for the node to split.
+   * @param maximumDepth Maximum depth for the tree.
+   * @param dimensionSelector Instantiated dimension selection policy.
+   */
+  template<typename MatType, typename LabelsType, typename WeightsType>
+  DecisionTree(
+      MatType data,
+      LabelsType labels,
+      const size_t numClasses,
+      WeightsType weights,
+      const size_t minimumLeafSize = 10,
+      const double minimumGainSplit = 1e-7,
+      const size_t maximumDepth = 0,
+      DimensionSelectionType dimensionSelector = DimensionSelectionType(),
+      const std::enable_if_t<arma::is_arma_type<
+          std::remove_reference_t<WeightsType>>::value>* = 0);
 
   /**
    * Using the hyperparameters of another decision tree, train on the given data
@@ -172,37 +193,7 @@ class DecisionTree :
       const size_t minimumLeafSize = 10,
       const double minimumGainSplit = 1e-7,
       const std::enable_if_t<arma::is_arma_type<
-          typename std::remove_reference<WeightsType>::type>::value>* = 0);
-  /**
-   * Construct the decision tree on the given data and labels with weights,
-   * assuming that the data is all of the numeric type. Setting minimumLeafSize
-   * and minimumGainSplit too small may cause the tree to overfit, but setting
-   * them too large may cause it to underfit.
-   *
-   * Use std::move if data, labels or weights are no longer needed to avoid
-   * copies.
-   *
-   * @param data Dataset to train on.
-   * @param labels Labels for each training point.
-   * @param numClasses Number of classes in the dataset.
-   * @param weights The Weight list of given labels.
-   * @param minimumLeafSize Minimum number of points in each leaf node.
-   * @param minimumGainSplit Minimum gain for the node to split.
-   * @param maximumDepth Maximum depth for the tree.
-   * @param dimensionSelector Instantiated dimension selection policy.
-   */
-  template<typename MatType, typename LabelsType, typename WeightsType>
-  DecisionTree(
-      MatType data,
-      LabelsType labels,
-      const size_t numClasses,
-      WeightsType weights,
-      const size_t minimumLeafSize = 10,
-      const double minimumGainSplit = 1e-7,
-      const size_t maximumDepth = 0,
-      DimensionSelectionType dimensionSelector = DimensionSelectionType(),
-      const std::enable_if_t<arma::is_arma_type<
-          typename std::remove_reference<WeightsType>::type>::value>* = 0);
+          std::remove_reference_t<WeightsType>>::value>* = 0);
 
   /**
    * Take ownership of another decision tree and train on the given data and
@@ -234,7 +225,7 @@ class DecisionTree :
       const size_t maximumDepth = 0,
       DimensionSelectionType dimensionSelector = DimensionSelectionType(),
       const std::enable_if_t<arma::is_arma_type<
-          typename std::remove_reference<WeightsType>::type>::value>* = 0);
+          std::remove_reference_t<WeightsType>>::value>* = 0);
 
   /**
    * Construct a decision tree without training it.  It will be a leaf node with
@@ -368,8 +359,8 @@ class DecisionTree :
                const size_t maximumDepth = 0,
                DimensionSelectionType dimensionSelector =
                    DimensionSelectionType(),
-               const std::enable_if_t<arma::is_arma_type<typename
-                   std::remove_reference<WeightsType>::type>::value>* = 0);
+               const std::enable_if_t<arma::is_arma_type<
+                   std::remove_reference_t<WeightsType>>::value>* = 0);
 
   /**
    * Train the decision tree on the given weighted data, assuming that all
@@ -400,8 +391,8 @@ class DecisionTree :
                const size_t maximumDepth = 0,
                DimensionSelectionType dimensionSelector =
                    DimensionSelectionType(),
-               const std::enable_if_t<arma::is_arma_type<typename
-                   std::remove_reference<WeightsType>::type>::value>* = 0);
+               const std::enable_if_t<arma::is_arma_type<
+                   std::remove_reference_t<WeightsType>>::value>* = 0);
 
   /**
    * Classify the given point, using the entire tree.  The predicted label is
@@ -470,6 +461,11 @@ class DecisionTree :
   //! trained tree).
   size_t SplitDimension() const { return splitDimension; }
 
+  //! Get the class probabilities, if this is a leaf node in the trained tree.
+  //! Note that if this is not a leaf, then this may contain arbitrary
+  //! information used by the split in the tree!
+  const arma::vec& ClassProbabilities() const { return classProbabilities; }
+
   /**
    * Given a point and that this node is not a leaf, calculate the index of the
    * child node this point would go towards.  This method is primarily used by
@@ -511,10 +507,9 @@ class DecisionTree :
   //! Note that this class will also hold the members of the NumericSplit and
   //! CategoricalSplit AuxiliarySplitInfo classes, since it inherits from them.
   //! We'll define some convenience typedefs here.
-  typedef typename NumericSplit::AuxiliarySplitInfo
-      NumericAuxiliarySplitInfo;
-  typedef typename CategoricalSplit::AuxiliarySplitInfo
-      CategoricalAuxiliarySplitInfo;
+  using NumericAuxiliarySplitInfo = typename NumericSplit::AuxiliarySplitInfo;
+  using CategoricalAuxiliarySplitInfo =
+      typename CategoricalSplit::AuxiliarySplitInfo;
 
   /**
    * Calculate the class probabilities of the given labels.
@@ -541,14 +536,14 @@ class DecisionTree :
    * @param maximumDepth Maximum depth for the tree.
    * @return The final entropy of decision tree.
    */
-  template<bool UseWeights, typename MatType>
+  template<bool UseWeights, typename MatType, typename WeightsType>
   double Train(MatType& data,
                const size_t begin,
                const size_t count,
                const data::DatasetInfo& datasetInfo,
                arma::Row<size_t>& labels,
                const size_t numClasses,
-               arma::rowvec& weights,
+               WeightsType& weights,
                const size_t minimumLeafSize,
                const double minimumGainSplit,
                const size_t maximumDepth,
@@ -570,13 +565,13 @@ class DecisionTree :
    * @param maximumDepth Maximum depth for the tree.
    * @return The final entropy of decision tree.
    */
-  template<bool UseWeights, typename MatType>
+  template<bool UseWeights, typename MatType, typename WeightsType>
   double Train(MatType& data,
                const size_t begin,
                const size_t count,
                arma::Row<size_t>& labels,
                const size_t numClasses,
-               arma::rowvec& weights,
+               WeightsType& weights,
                const size_t minimumLeafSize,
                const double minimumGainSplit,
                const size_t maximumDepth,
@@ -600,11 +595,11 @@ using DecisionStump = DecisionTree<FitnessFunction,
  * Convenience typedef for ID3 decision stumps (single level decision trees made
  * with the ID3 algorithm).
  */
-typedef DecisionTree<InformationGain,
-                     BestBinaryNumericSplit,
-                     AllCategoricalSplit,
-                     AllDimensionSelect,
-                     true> ID3DecisionStump;
+using ID3DecisionStump = DecisionTree<InformationGain,
+                                      BestBinaryNumericSplit,
+                                      AllCategoricalSplit,
+                                      AllDimensionSelect,
+                                      true>;
 } // namespace mlpack
 
 // Include implementation.

@@ -18,7 +18,7 @@
 namespace mlpack {
 
 template<typename MatType>
-IdentityType<MatType>::IdentityType() : 
+IdentityType<MatType>::IdentityType() :
     Layer<MatType>()
 {
   // Nothing to do here.
@@ -74,6 +74,7 @@ void IdentityType<MatType>::Forward(
 template<typename MatType>
 void IdentityType<MatType>::Backward(
   const MatType& /* input */,
+  const MatType& /* output */,
   const MatType& gy,
   MatType& g)
 {

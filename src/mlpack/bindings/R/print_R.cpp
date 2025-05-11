@@ -35,7 +35,7 @@ void PrintR(util::Params& params,
   const util::BindingDetails& doc = params.Doc();
 
   map<string, util::ParamData>& parameters = params.Parameters();
-  typedef map<string, util::ParamData>::iterator ParamIter;
+  using ParamIter = map<string, util::ParamData>::iterator;
 
   // First, let's get a list of input and output options.  We'll take two passes
   // so that the required input options are the first in the list.
@@ -184,20 +184,9 @@ void PrintR(util::Params& params,
        << endl;
   for (const string& opt : inputOptions)
   {
-    if (opt != "verbose")
-    {
-      util::ParamData& d = parameters.at(opt);
-      params.functionMap[d.tname]["PrintInputProcessing"](d, NULL, NULL);
-    }
+    util::ParamData& d = parameters.at(opt);
+    params.functionMap[d.tname]["PrintInputProcessing"](d, NULL, NULL);
   }
-
-  // Special handling for verbose output.
-  cout << "  if (verbose) {" << endl;
-  cout << "    EnableVerbose()" << endl;
-  cout << "  } else {" << endl;
-  cout << "    DisableVerbose()" << endl;
-  cout << "  }" << endl;
-  cout << endl;
 
   // Mark output parameters as passed.
   cout << "  # Mark all output options as passed." << endl;

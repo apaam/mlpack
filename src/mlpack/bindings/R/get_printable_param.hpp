@@ -25,14 +25,14 @@ namespace r {
 template<typename T>
 std::string GetPrintableParam(
     util::ParamData& data,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<!util::IsStdVector<T>::value>::type* = 0,
-    const typename std::enable_if<!data::HasSerialize<T>::value>::type* = 0,
-    const typename std::enable_if<!std::is_same<T,
-        std::tuple<data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<!util::IsStdVector<T>::value>* = 0,
+    const std::enable_if_t<!data::HasSerialize<T>::value>* = 0,
+    const std::enable_if_t<!std::is_same_v<T,
+        std::tuple<data::DatasetInfo, arma::mat>>>* = 0)
 {
   std::ostringstream oss;
-  oss << MLPACK_ANY_CAST<T>(data.value);
+  oss << std::any_cast<T>(data.value);
   return oss.str();
 }
 
@@ -42,9 +42,9 @@ std::string GetPrintableParam(
 template<typename T>
 std::string GetPrintableParam(
     util::ParamData& data,
-    const typename std::enable_if<util::IsStdVector<T>::value>::type* = 0)
+    const std::enable_if_t<util::IsStdVector<T>::value>* = 0)
 {
-  const T& t = MLPACK_ANY_CAST<T>(data.value);
+  const T& t = std::any_cast<T>(data.value);
 
   std::ostringstream oss;
   for (size_t i = 0; i < t.size(); ++i)
@@ -58,10 +58,10 @@ std::string GetPrintableParam(
 template<typename T>
 std::string GetPrintableParam(
     util::ParamData& data,
-    const typename std::enable_if<arma::is_arma_type<T>::value>::type* = 0)
+    const std::enable_if_t<arma::is_arma_type<T>::value>* = 0)
 {
   // Get the matrix.
-  const T& matrix = MLPACK_ANY_CAST<T>(data.value);
+  const T& matrix = std::any_cast<T>(data.value);
 
   std::ostringstream oss;
   oss << matrix.n_rows << "x" << matrix.n_cols << " matrix";
@@ -74,11 +74,11 @@ std::string GetPrintableParam(
 template<typename T>
 std::string GetPrintableParam(
     util::ParamData& data,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<data::HasSerialize<T>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<data::HasSerialize<T>::value>* = 0)
 {
   std::ostringstream oss;
-  oss << data.cppType << " model at " << MLPACK_ANY_CAST<T*>(data.value);
+  oss << data.cppType << " model at " << std::any_cast<T*>(data.value);
   return oss.str();
 }
 
@@ -88,11 +88,11 @@ std::string GetPrintableParam(
 template<typename T>
 std::string GetPrintableParam(
     util::ParamData& data,
-    const typename std::enable_if<std::is_same<T,
-        std::tuple<data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<std::is_same_v<T,
+        std::tuple<data::DatasetInfo, arma::mat>>>* = 0)
 {
   // Get the matrix.
-  const T& tuple = MLPACK_ANY_CAST<T>(data.value);
+  const T& tuple = std::any_cast<T>(data.value);
   const arma::mat& matrix = std::get<1>(tuple);
 
   std::ostringstream oss;
@@ -116,7 +116,7 @@ void GetPrintableParam(util::ParamData& data,
                        void* output)
 {
   *((std::string*) output) =
-      GetPrintableParam<typename std::remove_pointer<T>::type>(data);
+      GetPrintableParam<std::remove_pointer_t<T>>(data);
 }
 
 } // namespace r

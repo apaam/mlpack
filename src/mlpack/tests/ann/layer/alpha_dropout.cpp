@@ -49,13 +49,13 @@ TEST_CASE("SimpleAlphaDropoutLayerTest", "[ANNLayerTest]")
 
   // Test the Backward function when training phase.
   arma::mat delta;
-  module.Backward(input, input, delta);
+  module.Backward(input, output, input, delta);
   REQUIRE(arma::as_scalar(arma::abs(arma::mean(delta) - 0)) <= 0.1);
 
   // Test the Forward function when testing phase.
   module.Training() = false;
   module.Forward(input, output);
-  REQUIRE(arma::accu(input) == arma::accu(output));
+  REQUIRE(accu(input) == accu(output));
 }
 
 /**
@@ -108,6 +108,6 @@ TEST_CASE("NoAlphaDropoutTest", "[ANNLayerTest]")
   arma::mat output;
   module.Forward(input, output);
 
-  REQUIRE(arma::accu(output) == arma::accu(input));
+  REQUIRE(accu(output) == accu(input));
 }
 

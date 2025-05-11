@@ -45,24 +45,23 @@ void PrintDoc(util::ParamData& d,
   std::ostringstream oss;
   oss << " - ";
   oss << util::CamelCase(d.name, Lower) << " (";
-  oss << GetGoType<typename std::remove_pointer<T>::type>(d) << "): "
-      << d.desc;
+  oss << GetGoType<std::remove_pointer_t<T>>(d) << "): " << d.desc;
 
   // Print a default, if possible.
   if (!d.required)
   {
     if (d.cppType == "std::string")
     {
-      oss << "  Default value '" << MLPACK_ANY_CAST<std::string>(d.value)
+      oss << "  Default value '" << std::any_cast<std::string>(d.value)
           << "'.";
     }
     else if (d.cppType == "double")
     {
-      oss << "  Default value " << MLPACK_ANY_CAST<double>(d.value) << ".";
+      oss << "  Default value " << std::any_cast<double>(d.value) << ".";
     }
     else if (d.cppType == "int")
     {
-      oss << "  Default value " << MLPACK_ANY_CAST<int>(d.value) << ".";
+      oss << "  Default value " << std::any_cast<int>(d.value) << ".";
     }
   }
 

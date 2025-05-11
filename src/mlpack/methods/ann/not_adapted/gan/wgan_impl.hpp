@@ -27,7 +27,7 @@ template<
   typename PolicyType
 >
 template<typename Policy>
-typename std::enable_if<std::is_same<Policy, WGAN>::value, double>::type
+std::enable_if_t<std::is_same_v<Policy, WGAN>, double>
 GAN<Model, InitializationRuleType, Noise, PolicyType>::Evaluate(
     const arma::mat& /* parameters */,
     const size_t i,
@@ -63,7 +63,7 @@ GAN<Model, InitializationRuleType, Noise, PolicyType>::Evaluate(
   discriminator.Forward(predictors.cols(numFunctions,
       numFunctions + batchSize - 1));
   responses.cols(numFunctions, numFunctions + batchSize - 1) =
-      -arma::ones(1, batchSize);
+      -ones(1, batchSize);
 
   currentTarget = arma::mat(responses.memptr() + numFunctions,
       1, batchSize, false, false);
@@ -82,7 +82,7 @@ template<
   typename PolicyType
 >
 template<typename GradType, typename Policy>
-typename std::enable_if<std::is_same<Policy, WGAN>::value, double>::type
+std::enable_if_t<std::is_same_v<Policy, WGAN>, double>
 GAN<Model, InitializationRuleType, Noise, PolicyType>::
 EvaluateWithGradient(const arma::mat& /* parameters */,
                      const size_t i,
@@ -98,7 +98,7 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
   {
     if (parameter.is_empty())
       Reset();
-    gradient = arma::zeros<arma::mat>(parameter.n_elem, 1);
+    gradient = zeros<arma::mat>(parameter.n_elem, 1);
   }
   else
     gradient.zeros();
@@ -111,7 +111,7 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
 
   if (noiseGradientDiscriminator.is_empty())
   {
-    noiseGradientDiscriminator = arma::zeros<arma::mat>(
+    noiseGradientDiscriminator = zeros<arma::mat>(
         gradientDiscriminator.n_elem, 1);
   }
   else
@@ -135,7 +135,7 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
   predictors.cols(numFunctions, numFunctions + batchSize - 1) =
       boost::apply_visitor(outputParameterVisitor, generator.network.back());
   responses.cols(numFunctions, numFunctions + batchSize - 1) =
-      -arma::ones(1, batchSize);
+      -ones(1, batchSize);
 
   // Get the gradients of the Generator.
   res += discriminator.EvaluateWithGradient(discriminator.parameter,
@@ -149,7 +149,7 @@ EvaluateWithGradient(const arma::mat& /* parameters */,
     // Minimize -D(G(noise)).
     // Pass the error from Discriminator to Generator.
     responses.cols(numFunctions, numFunctions + batchSize - 1) =
-        arma::ones(1, batchSize);
+        ones(1, batchSize);
 
     discriminator.outputLayer.Backward(
         boost::apply_visitor(outputParameterVisitor,
@@ -185,7 +185,7 @@ template<
   typename PolicyType
 >
 template<typename Policy>
-typename std::enable_if<std::is_same<Policy, WGAN>::value, void>::type
+std::enable_if_t<std::is_same_v<Policy, WGAN>, void>
 GAN<Model, InitializationRuleType, Noise, PolicyType>::
 Gradient(const arma::mat& parameters,
          const size_t i,

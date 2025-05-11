@@ -100,15 +100,14 @@ BINDING_EXAMPLE(
 // See also...
 BINDING_SEE_ALSO("@linear_regression", "#linear_regression");
 BINDING_SEE_ALSO("Least angle regression (pdf)",
-    "http://mlpack.org/papers/lars.pdf");
-BINDING_SEE_ALSO("LARS C++ class documentation",
-    "@src/mlpack/methods/lars/lars.hpp");
+    "https://mlpack.org/papers/lars.pdf");
+BINDING_SEE_ALSO("LARS C++ class documentation", "@doc/user/methods/lars.md");
 
 PARAM_TMATRIX_IN("input", "Matrix of covariates (X).", "i");
 PARAM_MATRIX_IN("responses", "Matrix of responses/observations (y).", "r");
 
-PARAM_MODEL_IN(LARS, "input_model", "Trained LARS model to use.", "m");
-PARAM_MODEL_OUT(LARS, "output_model", "Output LARS model.", "M");
+PARAM_MODEL_IN(LARS<>, "input_model", "Trained LARS model to use.", "m");
+PARAM_MODEL_OUT(LARS<>, "output_model", "Output LARS model.", "M");
 
 PARAM_TMATRIX_IN("test", "Matrix containing points to regress on (test "
     "points).", "t");
@@ -122,12 +121,17 @@ PARAM_DOUBLE_IN("lambda2", "Regularization parameter for l2-norm penalty.", "L",
     0);
 PARAM_FLAG("use_cholesky", "Use Cholesky decomposition during computation "
     "rather than explicitly computing the full Gram matrix.", "c");
+PARAM_FLAG("no_intercept", "Do not fit an intercept in the model.", "n");
+PARAM_FLAG("no_normalize", "Do not normalize data to unit variance before "
+    "modeling.", "N");
 
 void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
 {
   double lambda1 = params.Get<double>("lambda1");
   double lambda2 = params.Get<double>("lambda2");
   bool useCholesky = params.Has("use_cholesky");
+  bool noIntercept = params.Has("no_intercept");
+  bool noNormalize = params.Has("no_normalize");
 
   // Check parameters -- make sure everything given makes sense.
   RequireOnlyOnePassed(params, { "input", "input_model" }, true);
@@ -137,16 +141,20 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
         "specified, responses must also be specified");
   }
   ReportIgnoredParam(params, {{ "input", false }}, "responses");
+  ReportIgnoredParam(params, {{ "input", false }}, "no_intercept");
+  ReportIgnoredParam(params, {{ "input", false }}, "no_normalize");
 
   RequireAtLeastOnePassed(params, { "output_predictions", "output_model" },
       false, "no results will be saved");
   ReportIgnoredParam(params, {{ "test", true }}, "output_predictions");
 
-  LARS* lars;
+  LARS<>* lars;
   if (params.Has("input"))
   {
     // Initialize the object.
-    lars = new LARS(useCholesky, lambda1, lambda2);
+    lars = new LARS<>(useCholesky, lambda1, lambda2);
+    lars->FitIntercept(!noIntercept);
+    lars->NormalizeData(!noNormalize);
 
     // Load covariates.  We can avoid LARS transposing our data by choosing to
     // not transpose this data (that's why we used PARAM_TMATRIX_IN).
@@ -167,15 +175,14 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
       Log::Fatal << "Number of responses must be equal to number of rows of X!"
           << endl;
 
-    vec beta;
     arma::rowvec y = std::move(matY);
     timers.Start("lars_regression");
-    lars->Train(matX, y, beta, false /* do not transpose */);
+    lars->Train(matX, y, false /* do not transpose */);
     timers.Stop("lars_regression");
   }
   else // We must have --input_model_file.
   {
-    lars = params.Get<LARS*>("input_model");
+    lars = params.Get<LARS<>*>("input_model");
   }
 
   if (params.Has("test"))
@@ -199,5 +206,5 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
     params.Get<arma::mat>("output_predictions") = predictions.t();
   }
 
-  params.Get<LARS*>("output_model") = lars;
+  params.Get<LARS<>*>("output_model") = lars;
 }

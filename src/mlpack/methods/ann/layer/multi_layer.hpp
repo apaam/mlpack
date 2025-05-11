@@ -12,7 +12,6 @@
 #ifndef MLPACK_METHODS_ANN_LAYER_MULTI_LAYER_HPP
 #define MLPACK_METHODS_ANN_LAYER_MULTI_LAYER_HPP
 
-#include "../make_alias.hpp"
 #include "layer.hpp"
 
 namespace mlpack {
@@ -98,11 +97,13 @@ class MultiLayer : public Layer<MatType>
    * This function is expected to be called for the same input data as
    * `Forward()` was just called for.
    *
-   * @param input Output of Forward().
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy Propagated error from next layer.
    * @param g Matrix to store propagated error in for previous layer.
    */
   virtual void Backward(const MatType& input,
+                        const MatType& output,
                         const MatType& gy,
                         MatType& g);
 
@@ -127,7 +128,7 @@ class MultiLayer : public Layer<MatType>
   /**
    * Set the weights of the layer to use the memory given as `weightsPtr`.
    */
-  virtual void SetWeights(typename MatType::elem_type* weightsPtr);
+  virtual void SetWeights(const MatType& weightsIn);
 
   /**
    * Initialize the weight matrix of the layer.

@@ -15,6 +15,8 @@
 
 #include "multi_layer.hpp"
 
+#include <mlpack/core/util/log.hpp>
+
 namespace mlpack {
 
 template<typename MatType>
@@ -175,21 +177,26 @@ void MultiLayer<MatType>::Forward(
 
 template<typename MatType>
 void MultiLayer<MatType>::Backward(
-    const MatType& input, const MatType& gy, MatType& g)
+    const MatType& input,
+    const MatType& output,
+    const MatType& gy,
+    MatType& g)
 {
   if (network.size() > 1)
   {
     // Initialize memory for the backward pass (if needed).
     InitializeBackwardPassMemory(input.n_cols);
 
-    network.back()->Backward(input, gy, layerDeltas.back());
+    network.back()->Backward(layerOutputs[network.size() - 2], output, gy,
+        layerDeltas.back());
     for (size_t i = network.size() - 2; i > 0; --i)
-      network[i]->Backward(layerOutputs[i], layerDeltas[i + 1], layerDeltas[i]);
-    network[0]->Backward(layerOutputs[0], layerDeltas[1], g);
+      network[i]->Backward(layerOutputs[i - 1], layerOutputs[i],
+          layerDeltas[i + 1], layerDeltas[i]);
+    network[0]->Backward(input, layerOutputs[0], layerDeltas[1], g);
   }
   else if (network.size() == 1)
   {
-    network[0]->Backward(input, gy, g);
+    network[0]->Backward(input, output, gy, g);
   }
   else
   {
@@ -230,7 +237,7 @@ void MultiLayer<MatType>::Gradient(
 }
 
 template<typename MatType>
-void MultiLayer<MatType>::SetWeights(typename MatType::elem_type* weightsPtr)
+void MultiLayer<MatType>::SetWeights(const MatType& weightsIn)
 {
   size_t start = 0;
   const size_t totalWeightSize = WeightSize();
@@ -243,8 +250,9 @@ void MultiLayer<MatType>::SetWeights(typename MatType::elem_type* weightsPtr)
     Log::Assert(start + weightSize <= totalWeightSize,
         "FNN::SetLayerMemory(): parameter size does not match total layer "
         "weight size!");
-
-    network[i]->SetWeights(weightsPtr + start);
+    MatType tmpWeights;
+    MakeAlias(tmpWeights, weightsIn, weightSize, 1, start);
+    network[i]->SetWeights(tmpWeights);
     start += weightSize;
   }
 
@@ -271,11 +279,11 @@ void MultiLayer<MatType>::CustomInitialize(
     Log::Assert(start + weightSize <= totalWeightSize,
         "FNN::CustomInitialize(): parameter size does not match total layer "
         "weight size!");
-    
+
     MatType WTemp;
-    MakeAlias(WTemp, W.memptr() + start, weightSize, 1);
+    MakeAlias(WTemp, W, weightSize, 1, start);
     network[i]->CustomInitialize(WTemp, weightSize);
-    
+
     start += weightSize;
   }
 
@@ -383,8 +391,8 @@ void MultiLayer<MatType>::InitializeForwardPassMemory(const size_t batchSize)
   for (size_t i = 0; i < layerOutputs.size(); ++i)
   {
     const size_t layerOutputSize = network[i]->OutputSize();
-    MakeAlias(layerOutputs[i], layerOutputMatrix.colptr(start),
-        layerOutputSize, batchSize);
+    MakeAlias(layerOutputs[i], layerOutputMatrix, layerOutputSize, batchSize,
+        start * layerOutputMatrix.n_rows);
     start += batchSize * layerOutputSize;
   }
 }
@@ -412,8 +420,8 @@ void MultiLayer<MatType>::InitializeBackwardPassMemory(
     for (size_t j = 0; j < this->network[i]->InputDimensions().size(); ++j)
       layerInputSize *= this->network[i]->InputDimensions()[j];
 
-    MakeAlias(layerDeltas[i], layerDeltaMatrix.colptr(start), layerInputSize,
-        batchSize);
+    MakeAlias(layerDeltas[i], layerDeltaMatrix, layerInputSize,
+        batchSize, start * layerDeltaMatrix.n_rows);
     start += batchSize * layerInputSize;
   }
 }
@@ -427,8 +435,7 @@ void MultiLayer<MatType>::InitializeGradientPassMemory(MatType& gradient)
   for (size_t i = 0; i < network.size(); ++i)
   {
     const size_t weightSize = network[i]->WeightSize();
-    MakeAlias(layerGradients[i], gradient.memptr() + gradientStart,
-        weightSize, 1);
+    MakeAlias(layerGradients[i], gradient, weightSize, 1, gradientStart);
     gradientStart += weightSize;
   }
 }

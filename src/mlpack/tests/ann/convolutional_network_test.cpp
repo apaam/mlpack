@@ -71,7 +71,9 @@ void CheckMoveFunction(ModelType* network1,
 TEST_CASE("PaddingTest", "[ConvolutionalNetworktest]")
 {
   arma::mat X;
-  X.load("mnist_first250_training_4s_and_9s.arm");
+  X.load("mnist_first250_training_4s_and_9s.csv");
+  // Make sure the data loaded okay.
+  REQUIRE(!X.is_empty());
 
   // Create the network.
   FFN<NegativeLogLikelihood, RandomInitialization> model;
@@ -148,7 +150,9 @@ TEST_CASE("MaxPoolingTest", "[ConvolutionalNetworkTest]")
 TEST_CASE("VanillaNetworkTest", "[ConvolutionalNetworkTest]")
 {
   arma::mat X;
-  X.load("mnist_first250_training_4s_and_9s.arm");
+  X.load("mnist_first250_training_4s_and_9s.csv");
+  // Make sure the data loaded okay.
+  REQUIRE(!X.is_empty());
 
   // Normalize each point since these are images.
   arma::uword nPoints = X.n_cols;
@@ -232,7 +236,7 @@ TEST_CASE("VanillaNetworkTest", "[ConvolutionalNetworkTest]")
             arma::max(predictionTemp.col(i)) == predictionTemp.col(i), 1));
     }
 
-    size_t correct = arma::accu(prediction == Y);
+    size_t correct = accu(prediction == Y);
     double classificationError = 1 - double(correct) / X.n_cols;
     if (classificationError <= 0.25)
     {
@@ -264,7 +268,9 @@ TEST_CASE("VanillaNetworkBatchSizeTest", "[ConvolutionalNetworkTest]")
   model.InputDimensions() = std::vector<size_t>({ 28, 28 });
 
   arma::mat X;
-  X.load("mnist_first250_training_4s_and_9s.arm");
+  X.load("mnist_first250_training_4s_and_9s.csv");
+  // Make sure the data loaded okay.
+  REQUIRE(!X.is_empty());
 
   // Normalize each point since these are images.
   arma::uword nPoints = X.n_cols;
@@ -313,7 +319,7 @@ TEST_CASE("VanillaNetworkBatchSizeTest", "[ConvolutionalNetworkTest]")
 
     // Now compute results with a batch size of 1.
     arma::mat singleResults(results.n_rows, results.n_cols);
-    arma::mat singleGradient(gradient.n_rows, gradient.n_cols, arma::fill::zeros);
+    arma::mat singleGradient(gradient.n_rows, gradient.n_cols);
     double singleObj = 0.0;
 
     for (size_t i = 0; i < batchSize; ++i)
@@ -347,7 +353,9 @@ TEST_CASE("VanillaNetworkBatchSizeTest", "[ConvolutionalNetworkTest]")
 TEST_CASE("CheckCopyVanillaNetworkTest", "[ConvolutionalNetworkTest]")
 {
   arma::mat X;
-  X.load("mnist_first250_training_4s_and_9s.arm");
+  X.load("mnist_first250_training_4s_and_9s.csv");
+  // Make sure the data loaded okay.
+  REQUIRE(!X.is_empty());
 
   // Normalize each point since these are images.
   arma::uword nPoints = X.n_cols;
@@ -447,13 +455,13 @@ TEST_CASE("Issue2986", "[ConvolutionalNetworkTest]")
   c.InputDimensions() = std::vector<size_t>({ 6, 6 });
   c.ComputeOutputDimensions();
   arma::mat weights(c.WeightSize(), 1, arma::fill::randu);
-  c.SetWeights(weights.memptr());
+  c.SetWeights(weights);
 
   output.set_size(c.OutputSize(), 1);
   delta.set_size(input.size());
 
   REQUIRE_NOTHROW(c.Forward(input, output));
-  REQUIRE_NOTHROW(c.Backward(input, output, delta));
+  REQUIRE_NOTHROW(c.Backward(input, output, output, delta));
 
   // Now test with a stride of 3.
   c = Convolution(1, 3, 3, 3, 3, 0, 0);
@@ -463,13 +471,13 @@ TEST_CASE("Issue2986", "[ConvolutionalNetworkTest]")
   c.ComputeOutputDimensions();
   weights.set_size(c.WeightSize(), 1);
   weights.randu();
-  c.SetWeights(weights.memptr());
+  c.SetWeights(weights);
 
   output.set_size(c.OutputSize(), 1);
   delta.set_size(input.size());
 
   REQUIRE_NOTHROW(c.Forward(input, output));
-  REQUIRE_NOTHROW(c.Backward(input, output, delta));
+  REQUIRE_NOTHROW(c.Backward(input, output, output, delta));
 
   // Now test with different strides for height and width.
   c = Convolution(1, 3, 3, 2, 3, 0, 0);
@@ -479,13 +487,13 @@ TEST_CASE("Issue2986", "[ConvolutionalNetworkTest]")
   c.ComputeOutputDimensions();
   weights.set_size(c.WeightSize(), 1);
   weights.randu();
-  c.SetWeights(weights.memptr());
+  c.SetWeights(weights);
 
   output.set_size(c.OutputSize(), 1);
   delta.set_size(input.size());
 
   REQUIRE_NOTHROW(c.Forward(input, output));
-  REQUIRE_NOTHROW(c.Backward(input, output, delta));
+  REQUIRE_NOTHROW(c.Backward(input, output, output, delta));
 }
 
 // Test that the Convolution layer gives reasonable output when a non-zero
@@ -508,7 +516,7 @@ TEST_CASE("CustomPaddingTest", "[ConvolutionalNetworkTest]")
 
   weights.set_size(c.WeightSize(), 1);
   weights.ones();
-  c.SetWeights(weights.memptr());
+  c.SetWeights(weights);
 
   // Now make sure that the forward pass returns the correct output.
   output.set_size(c.OutputSize(), 1);
@@ -520,5 +528,5 @@ TEST_CASE("CustomPaddingTest", "[ConvolutionalNetworkTest]")
   REQUIRE(output(output.n_rows - 1, 0) == 1.0);
 
   delta.set_size(input.size());
-  REQUIRE_NOTHROW(c.Backward(input, output, delta));
+  REQUIRE_NOTHROW(c.Backward(input, output, output, delta));
 }

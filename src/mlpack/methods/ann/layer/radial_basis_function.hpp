@@ -90,6 +90,7 @@ class RBFType : public Layer<MatType>
    * Ordinary feed backward pass of the radial basis function.
    */
   void Backward(const MatType& /* input */,
+                const MatType& /* output */,
                 const MatType& /* gy */,
                 MatType& /* g */);
 
@@ -120,7 +121,7 @@ class RBFType : public Layer<MatType>
   MatType distances;
 }; // class RBFType
 
-typedef RBFType<arma::mat> RBF;
+using RBF = RBFType<arma::mat>;
 
 } // namespace mlpack
 

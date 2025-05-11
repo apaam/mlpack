@@ -14,7 +14,6 @@
 #include "catch.hpp"
 #include "serialization.hpp"
 
-#include <mlpack/methods/ann.hpp>
 #include <mlpack/methods/hoeffding_trees.hpp>
 #include <mlpack/methods/perceptron.hpp>
 #include <mlpack/methods/logistic_regression.hpp>
@@ -153,12 +152,12 @@ TEST_CASE("BallBoundTest", "[SerializationTest]")
 
 TEST_CASE("MahalanobisBallBoundTest", "[SerializationTest]")
 {
-  BallBound<MahalanobisDistance<>, arma::vec> b(100);
+  BallBound<MahalanobisDistance<>, double, arma::vec> b(100);
   b.Center().randu();
   b.Radius() = 14.0;
-  b.Metric().Covariance().randu(100, 100);
+  b.Distance().Q().randu(100, 100);
 
-  BallBound<MahalanobisDistance<>, arma::vec> xmlB, jsonB, binaryB;
+  BallBound<MahalanobisDistance<>, double, arma::vec> xmlB, jsonB, binaryB;
 
   SerializeObjectAll(b, xmlB, jsonB, binaryB);
 
@@ -169,10 +168,10 @@ TEST_CASE("MahalanobisBallBoundTest", "[SerializationTest]")
 
   // Check the vectors.
   CheckMatrices(b.Center(), xmlB.Center(), jsonB.Center(), binaryB.Center());
-  CheckMatrices(b.Metric().Covariance(),
-                xmlB.Metric().Covariance(),
-                jsonB.Metric().Covariance(),
-                binaryB.Metric().Covariance());
+  CheckMatrices(b.Distance().Q(),
+                xmlB.Distance().Q(),
+                jsonB.Distance().Q(),
+                binaryB.Distance().Q());
 }
 
 TEST_CASE("HRectBoundTest", "[SerializationTest]")
@@ -300,7 +299,7 @@ TEST_CASE("BinarySpaceTreeTest", "[SerializationTest]")
 {
   arma::mat data;
   data.randu(3, 100);
-  typedef KDTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  using TreeType = KDTree<EuclideanDistance, EmptyStatistic, arma::mat>;
   TreeType tree(data);
 
   TreeType* xmlTree;
@@ -320,7 +319,7 @@ TEST_CASE("BinarySpaceTreeOverwriteTest", "[SerializationTest]")
 {
   arma::mat data;
   data.randu(3, 100);
-  typedef KDTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  using TreeType = KDTree<EuclideanDistance, EmptyStatistic, arma::mat>;
   TreeType tree(data);
 
   arma::mat otherData;
@@ -338,8 +337,8 @@ TEST_CASE("CoverTreeTest", "[SerializationTest]")
 {
   arma::mat data;
   data.randu(3, 100);
-  typedef StandardCoverTree<EuclideanDistance, EmptyStatistic, arma::mat>
-      TreeType;
+  using TreeType =
+      StandardCoverTree<EuclideanDistance, EmptyStatistic, arma::mat>;
   TreeType tree(data);
 
   TreeType* xmlTree;
@@ -393,8 +392,8 @@ TEST_CASE("CoverTreeOverwriteTest", "[SerializationTest]")
 {
   arma::mat data;
   data.randu(3, 100);
-  typedef StandardCoverTree<EuclideanDistance, EmptyStatistic, arma::mat>
-      TreeType;
+  using TreeType =
+      StandardCoverTree<EuclideanDistance, EmptyStatistic, arma::mat>;
   TreeType tree(data);
 
   arma::mat otherData;
@@ -442,11 +441,11 @@ TEST_CASE("CoverTreeOverwriteTest", "[SerializationTest]")
   }
 }
 
-TEST_CASE("RectangleTreeTest", "[SerializationTest]")
+TEST_CASE("RectangleTreeSerializationTest", "[SerializationTest]")
 {
   arma::mat data;
   data.randu(3, 1000);
-  typedef RTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  using TreeType = RTree<EuclideanDistance, EmptyStatistic, arma::mat>;
   TreeType tree(data);
 
   TreeType* xmlTree;
@@ -501,7 +500,7 @@ TEST_CASE("RectangleTreeOverwriteTest", "[SerializationTest]")
 {
   arma::mat data;
   data.randu(3, 1000);
-  typedef RTree<EuclideanDistance, EmptyStatistic, arma::mat> TreeType;
+  using TreeType = RTree<EuclideanDistance, EmptyStatistic, arma::mat>;
   TreeType tree(data);
 
   arma::mat otherData;
@@ -636,10 +635,10 @@ TEST_CASE("SoftmaxRegressionTest", "[SerializationTest]")
     labels[i] = 0;
   for (size_t i = 500; i < 1000; ++i)
     labels[i] = 1;
-  SoftmaxRegression sr(dataset, labels, 2);
-  SoftmaxRegression srXml(dataset.n_rows, 2);
-  SoftmaxRegression srText(dataset.n_rows, 2);
-  SoftmaxRegression srBinary(dataset.n_rows, 2);
+  SoftmaxRegression<> sr(dataset, labels, 2);
+  SoftmaxRegression<> srXml(dataset.n_rows, 2);
+  SoftmaxRegression<> srText(dataset.n_rows, 2);
+  SoftmaxRegression<> srBinary(dataset.n_rows, 2);
 
   SerializeObjectAll(sr, srXml, srText, srBinary);
 
@@ -649,7 +648,7 @@ TEST_CASE("SoftmaxRegressionTest", "[SerializationTest]")
 
 TEST_CASE("DETTest", "[SerializationTest]")
 {
-  typedef DTree<arma::mat> DTreeX;
+  using DTreeX = DTree<arma::mat>;
 
   // Create a density estimation tree on a random dataset.
   arma::mat dataset = arma::randu<arma::mat>(25, 5000);
@@ -1062,20 +1061,18 @@ TEST_CASE("LARSTest", "[SerializationTest]")
   arma::vec beta = arma::randn(75, 1);
   arma::rowvec y = beta.t() * X;
 
-  LARS lars(true, 0.1, 0.1);
-  arma::vec betaOpt;
-  lars.Train(X, y, betaOpt);
+  LARS<> lars(true, 0.1, 0.1);
+  lars.Train(X, y);
 
   // Now, serialize.
-  LARS xmlLars(false, 0.5, 0.0), binaryLars(true, 1.0, 0.0),
+  LARS<> xmlLars(false, 0.5, 0.0), binaryLars(true, 1.0, 0.0),
       jsonLars(false, 0.1, 0.1);
 
   // Train jsonLars.
   arma::mat jsonX = arma::randn(25, 150);
   arma::vec jsonBeta = arma::randn(25, 1);
   arma::rowvec jsonY = jsonBeta.t() * jsonX;
-  arma::vec jsonBetaOpt;
-  jsonLars.Train(jsonX, jsonY, jsonBetaOpt);
+  jsonLars.Train(jsonX, jsonY);
 
   SerializeObjectAll(lars, xmlLars, binaryLars, jsonLars);
 
@@ -1553,12 +1550,12 @@ TEST_CASE("BayesianLinearRegressionTest", "[SerializationTest]")
   arma::vec omega = arma::randn(75, 1);
   arma::rowvec y = omega.t() * matX;
 
-  BayesianLinearRegression blr(false, false);
+  BayesianLinearRegression<> blr(false, false);
   blr.Train(matX, y);
   arma::vec omegaOpt = blr.Omega();
 
   // Now, serialize.
-  BayesianLinearRegression xmlBlr(false, false), binaryBlr(false, false),
+  BayesianLinearRegression<> xmlBlr(false, false), binaryBlr(false, false),
     textBlr(false, false);
 
   SerializeObjectAll(blr, xmlBlr, binaryBlr, textBlr);

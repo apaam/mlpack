@@ -60,11 +60,13 @@ class AddType : public Layer<MatType>
   /**
    * Backward pass: send weights backwards (the bias does not affect anything).
    *
-   * @param * (input) The propagated input activation.
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
   void Backward(const MatType& /* input */,
+                const MatType& /* output */,
                 const MatType& gy,
                 MatType& g);
 
@@ -92,7 +94,7 @@ class AddType : public Layer<MatType>
   void ComputeOutputDimensions();
 
   //! Set the weights of the layer to use the given memory.
-  void SetWeights(typename MatType::elem_type* weightPtr);
+  void SetWeights(const MatType& weightsIn);
 
   /**
    * Serialize the layer.
@@ -109,7 +111,7 @@ class AddType : public Layer<MatType>
 }; // class Add
 
 // Standard Add layer.
-typedef AddType<arma::mat> Add;
+using Add = AddType<arma::mat>;
 
 } // namespace mlpack
 

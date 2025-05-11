@@ -10,7 +10,6 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#define MLPACK_ENABLE_ANN_SERIALIZATION
 #include <mlpack/core.hpp>
 #include <mlpack/methods/ann.hpp>
 
@@ -42,7 +41,7 @@ TEST_CASE("BatchNormTest", "[ANNLayerTest]")
   module1.ComputeOutputDimensions();
   arma::mat moduleParams(module1.WeightSize(), 1);
   module1.CustomInitialize(moduleParams, module1.WeightSize());
-  module1.SetWeights((double*) moduleParams.memptr());
+  module1.SetWeights(moduleParams);
 
   // BatchNorm layer with average parameter set to false (using momentum).
   BatchNorm module2(2, 2, 1e-5, false);
@@ -51,14 +50,14 @@ TEST_CASE("BatchNormTest", "[ANNLayerTest]")
   module2.ComputeOutputDimensions();
   arma::mat moduleParams2(module2.WeightSize(), 1);
   module2.CustomInitialize(moduleParams2, module2.WeightSize());
-  module2.SetWeights((double*) moduleParams2.memptr());
+  module2.SetWeights(moduleParams2);
 
   // Training Forward Pass Test.
   output.set_size(module1.OutputSize(), 1);
   input.reshape(9, 1);
   module1.Forward(input, output);
 
- // Value calculates using torch.nn.BatchNorm1d(momentum = None).
+  // Value calculates using torch.nn.BatchNorm1d(momentum = None).
   arma::mat result;
   output.reshape(3, 3);
   result = { { 1.1658, 0.1100, -1.2758 },
@@ -74,13 +73,13 @@ TEST_CASE("BatchNormTest", "[ANNLayerTest]")
   result.clear();
   output.clear();
 
- // Values calculated using torch.nn.BatchNorm1d(momentum = None).
+  // Values calculated using torch.nn.BatchNorm1d(momentum = None).
   output = module1.TrainingMean();
   result = arma::mat({ 3.33333333, 3.1, 3.06666666 }).t();
 
   CheckMatrices(output, result, 1e-1);
 
- // Values calculated using torch.nn.BatchNorm1d().
+  // Values calculated using torch.nn.BatchNorm1d().
   output = module2.TrainingMean();
   result = arma::mat({ 0.3333, 0.3100, 0.3067 }).t();
 
@@ -248,7 +247,7 @@ TEST_CASE("BatchNormWithMinBatchesTest", "[ANNLayerTest]")
   module1.ComputeOutputDimensions();
   arma::mat moduleParams(module1.WeightSize(), 1);
   module1.CustomInitialize(moduleParams, module1.WeightSize());
-  module1.SetWeights((double*) moduleParams.memptr());
+  module1.SetWeights(moduleParams);
   output.set_size(8, 3);
   module1.Forward(input, output);
   CheckMatrices(output, result, 1e-1);
@@ -273,7 +272,7 @@ TEST_CASE("BatchNormWithMinBatchesTest", "[ANNLayerTest]")
   module2.ComputeOutputDimensions();
   arma::mat moduleParams2(module2.WeightSize(), 1);
   module2.CustomInitialize(moduleParams2, module2.WeightSize());
-  module2.SetWeights((double*) moduleParams2.memptr());
+  module2.SetWeights(moduleParams2);
   output.set_size(8, 3);
   module2.Forward(input, output);
   CheckMatrices(output, result, 1e-1);

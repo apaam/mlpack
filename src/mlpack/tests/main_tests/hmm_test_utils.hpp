@@ -36,7 +36,7 @@ struct InitHMMModel
   }
 
   //! Helper function to create discrete HMM.
-  static void Create(HMM<DiscreteDistribution>& hmm,
+  static void Create(HMM<DiscreteDistribution<>>& hmm,
                      vector<mat>& trainSeq,
                      size_t states,
                      double tolerance = 1e-05)
@@ -49,15 +49,15 @@ struct InitHMMModel
          ++it)
     {
       arma::Col<size_t> maxSeqs =
-          arma::conv_to<arma::Col<size_t>>::from(arma::max(*it, 1)) + 1;
+          ConvTo<arma::Col<size_t>>::From(arma::max(*it, 1)) + 1;
       maxEmissions = arma::max(maxEmissions, maxSeqs);
     }
 
-    hmm = HMM<DiscreteDistribution>(size_t(states),
-        DiscreteDistribution(maxEmissions), tolerance);
+    hmm = HMM<DiscreteDistribution<>>(size_t(states),
+        DiscreteDistribution<>(maxEmissions), tolerance);
   }
 
-  static void Create(HMM<GaussianDistribution>& hmm,
+  static void Create(HMM<GaussianDistribution<>>& hmm,
                      vector<mat>& trainSeq,
                      size_t states,
                      double tolerance = 1e-05)
@@ -77,8 +77,8 @@ struct InitHMMModel
     }
 
     // Get the model and initialize it.
-    hmm = HMM<GaussianDistribution>(size_t(states),
-        GaussianDistribution(dimensionality), tolerance);
+    hmm = HMM<GaussianDistribution<>>(size_t(states),
+        GaussianDistribution<>(dimensionality), tolerance);
   }
 
   static void Create(HMM<GMM>& hmm,
@@ -135,16 +135,16 @@ struct InitHMMModel
   }
 
   //! Helper function for discrete emission distributions.
-  static void RandomInitialize(vector<DiscreteDistribution>& e)
+  static void RandomInitialize(vector<DiscreteDistribution<>>& e)
   {
     for (size_t i = 0; i < e.size(); ++i)
     {
       e[i].Probabilities().randu();
-      e[i].Probabilities() /= arma::accu(e[i].Probabilities());
+      e[i].Probabilities() /= accu(e[i].Probabilities());
     }
   }
 
-  static void RandomInitialize(vector<GaussianDistribution>& e)
+  static void RandomInitialize(vector<GaussianDistribution<>>& e)
   {
     for (size_t i = 0; i < e.size(); ++i)
     {
@@ -162,7 +162,7 @@ struct InitHMMModel
     {
       // Random weights.
       e[i].Weights().randu();
-      e[i].Weights() /= arma::accu(e[i].Weights());
+      e[i].Weights() /= accu(e[i].Weights());
 
       // Random means and covariances.
       for (int g = 0; g < 2; ++g)
@@ -185,7 +185,7 @@ struct InitHMMModel
     {
       // Random weights.
       e[i].Weights().randu();
-      e[i].Weights() /= arma::accu(e[i].Weights());
+      e[i].Weights() /= accu(e[i].Weights());
 
       // Random means and covariances.
       for (int g = 0; g < 2; ++g)

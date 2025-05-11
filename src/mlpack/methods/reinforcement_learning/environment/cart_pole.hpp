@@ -3,7 +3,7 @@
  * @author Shangtong Zhang
  *
  * This file is an implementation of Cart Pole task:
- * https://www.gymlibrary.ml/environments/classic_control/cart_pole
+ * https://www.gymlibrary.dev/environments/classic_control/cart_pole
  *
  * TODO: provide an option to use dynamics directly from OpenAI gym.
  *
@@ -206,7 +206,7 @@ class CartPole
   State InitialSample()
   {
     stepsPerformed = 0;
-    return State((arma::randu<arma::colvec>(4) - 0.5) / 10.0);
+    return State((randu<arma::colvec>(4) - 0.5) / 10.0);
   }
 
   /**

@@ -12,7 +12,7 @@
 #define BINDING_TYPE BINDING_TYPE_TEST
 
 #include <mlpack/core.hpp>
-#include <mlpack/core/metrics/lmetric.hpp>
+#include <mlpack/core/distances/lmetric.hpp>
 #include <mlpack/methods/nca/nca_main.cpp>
 #include <mlpack/core/util/mlpack_main.hpp>
 
@@ -156,7 +156,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCANormalizationTest",
   RUN_BINDING();
 
   // Check that the output matrices are different.
-  REQUIRE(arma::accu(params.Get<arma::mat>("output") != output) > 0);
+  REQUIRE(accu(params.Get<arma::mat>("output") != output) > 0);
 }
 
 /**
@@ -198,7 +198,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentStepSizeTest",
   RUN_BINDING();
 
   // Check that the output matrices are different.
-  REQUIRE(arma::accu(params.Get<arma::mat>("output") != output) > 0);
+  REQUIRE(accu(params.Get<arma::mat>("output") != output) > 0);
 }
 
 /**
@@ -217,7 +217,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentToleranceTest",
     arma::mat x;
     x.randu(3, 600);
     arma::Row<size_t> labels = arma::randi<arma::Row<size_t>>(600,
-        arma::distr_param(0, 1));
+        DistrParam(0, 1));
 
     arma::mat y = x;
     arma::Row<size_t> labels2 = labels;
@@ -247,7 +247,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentToleranceTest",
     RUN_BINDING();
 
     // Check that the output matrices are different.
-    success = (arma::accu(params.Get<arma::mat>("output") != output) > 0);
+    success = (accu(params.Get<arma::mat>("output") != output) > 0);
     if (success)
       break;
 
@@ -298,7 +298,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentBatchSizeTest",
   RUN_BINDING();
 
   // Check that the output matrices are different.
-  REQUIRE(arma::accu(params.Get<arma::mat>("output") != output) > 0);
+  REQUIRE(accu(params.Get<arma::mat>("output") != output) > 0);
 }
 
 /**
@@ -339,7 +339,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCALinearScanTest",
   RUN_BINDING();
 
   // Check that the output matrices are different.
-  REQUIRE(arma::accu(params.Get<arma::mat>("output") != output) > 0);
+  REQUIRE(accu(params.Get<arma::mat>("output") != output) > 0);
 }
 
 /**
@@ -397,7 +397,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentNumBasisTest",
     arma::mat x;
     x.randu(8, 600);
     arma::Row<size_t> labels = arma::randi<arma::Row<size_t>>(600,
-        arma::distr_param(0, 1));
+        DistrParam(0, 1));
 
     arma::mat y = x;
     arma::Row<size_t> labels2 = labels;
@@ -425,7 +425,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentNumBasisTest",
     RUN_BINDING();
 
     // Check that the output matrices are different.
-    success = (arma::accu(params.Get<arma::mat>("output") != output) > 0);
+    success = (accu(params.Get<arma::mat>("output") != output) > 0);
     if (success)
       break;
 
@@ -452,7 +452,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentMaxIterationTest",
     arma::mat x;
     x.randu(3, 600);
     arma::Row<size_t> labels = arma::randi<arma::Row<size_t>>(600,
-        arma::distr_param(0, 1));
+        DistrParam(0, 1));
 
     arma::mat y = x;
     arma::Row<size_t> labels2 = labels;
@@ -480,7 +480,7 @@ TEST_CASE_METHOD(NCATestFixture, "NCADifferentMaxIterationTest",
     RUN_BINDING();
 
     // Check that the output matrices are different.
-    success = (arma::accu(params.Get<arma::mat>("output") != output) > 0);
+    success = (accu(params.Get<arma::mat>("output") != output) > 0);
     if (success)
       break;
 

@@ -88,11 +88,15 @@ class DropConnectType : public Layer<MatType>
   /**
    * Ordinary feed backward pass of the DropConnect layer.
    *
-   * @param input The propagated input activation.
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  void Backward(const MatType& input, const MatType& gy, MatType& g);
+  void Backward(const MatType& input,
+                const MatType& output,
+                const MatType& gy,
+                MatType& g);
 
   /**
    * Calculate the gradient using the output delta and the input activation.
@@ -120,7 +124,7 @@ class DropConnectType : public Layer<MatType>
   size_t WeightSize() const { return baseLayer->WeightSize(); }
 
   // Set the weights to use the given memory `weightsPtr`.
-  void SetWeights(typename MatType::elem_type* weightsPtr);
+  void SetWeights(const MatType& weightsIn);
 
   /**
    * Serialize the layer.
@@ -148,7 +152,7 @@ class DropConnectType : public Layer<MatType>
 // Convenience typedefs.
 
 // Standard DropConnect layer.
-typedef DropConnectType<arma::mat> DropConnect;
+using DropConnect = DropConnectType<arma::mat>;
 
 }  // namespace mlpack
 

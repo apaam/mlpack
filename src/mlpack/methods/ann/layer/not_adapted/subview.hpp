@@ -89,7 +89,7 @@ class SubviewType : public Layer<InputType, OutputType>
     {
       for (size_t i = 0; i < batchSize; ++i)
       {
-        output.col(i) = arma::vectorise(
+        output.col(i) = vectorise(
             input.submat(beginRow, batchBegin, endRow, batchEnd));
 
         // Move to next batch.
@@ -187,7 +187,7 @@ class SubviewType : public Layer<InputType, OutputType>
 }; // class SubviewType
 
 // Standard Subview layer.
-typedef SubviewType<arma::mat, arma::mat> Subview;
+using Subview = SubviewType<arma::mat, arma::mat>;
 
 } // namespace mlpack
 

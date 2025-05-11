@@ -31,10 +31,10 @@ void PrintOutputProcessing(
     util::ParamData& d,
     const size_t indent,
     const bool onlyOutput,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<!data::HasSerialize<T>::value>::type* = 0,
-    const typename std::enable_if<!std::is_same<T,
-        std::tuple<data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<!data::HasSerialize<T>::value>* = 0,
+    const std::enable_if_t<!std::is_same_v<T,
+        std::tuple<data::DatasetInfo, arma::mat>>>* = 0)
 {
   const std::string prefix(indent, ' ');
 
@@ -88,7 +88,7 @@ void PrintOutputProcessing(
     util::ParamData& d,
     const size_t indent,
     const bool onlyOutput,
-    const typename std::enable_if<arma::is_arma_type<T>::value>::type* = 0)
+    const std::enable_if_t<arma::is_arma_type<T>::value>* = 0)
 {
   const std::string prefix(indent, ' ');
 
@@ -97,28 +97,26 @@ void PrintOutputProcessing(
     /**
      * This gives us code like:
      *
-     * result = arma_numpy.mat_to_numpy_X(p.Get[mat]("name"))
+     * result = mat_to_numpy_X(p.Get[mat]("name"))
      *
      * where X indicates the type to convert to.
      */
-    std::cout << prefix << "result = arma_numpy." << GetArmaType<T>()
-        << "_to_numpy_" << GetNumpyTypeChar<T>() << "(p.Get["
-        << GetCythonType<T>(d) << "](\"" << d.name << "\"))" << std::endl;
+    std::cout << prefix << "result = " << GetArmaType<T>() << "_to_numpy_"
+        << GetNumpyTypeChar<T>() << "(p.Get[" << GetCythonType<T>(d) << "](\""
+        << d.name << "\"))" << std::endl;
   }
   else
   {
     /**
      * This gives us code like:
      *
-     * result['param_name'] =
-     *     arma_numpy.mat_to_numpy_X(p.Get[mat]('name')
+     * result['param_name'] = mat_to_numpy_X(p.Get[mat]('name')
      *
      * where X indicates the type to convert to.
      */
-    std::cout << prefix << "result['" << d.name
-        << "'] = arma_numpy." << GetArmaType<T>() << "_to_numpy_"
-        << GetNumpyTypeChar<T>() << "(p.Get[" << GetCythonType<T>(d)
-        << "]('" << d.name << "'))" << std::endl;
+    std::cout << prefix << "result['" << d.name << "'] = " << GetArmaType<T>()
+        << "_to_numpy_" << GetNumpyTypeChar<T>() << "(p.Get["
+        << GetCythonType<T>(d) << "]('" << d.name << "'))" << std::endl;
   }
 }
 
@@ -131,8 +129,8 @@ void PrintOutputProcessing(
     util::ParamData& d,
     const size_t indent,
     const bool onlyOutput,
-    const typename std::enable_if<std::is_same<T,
-        std::tuple<data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<std::is_same_v<T,
+        std::tuple<data::DatasetInfo, arma::mat>>>* = 0)
 {
   const std::string prefix(indent, ' ');
 
@@ -143,11 +141,11 @@ void PrintOutputProcessing(
     /**
      * This gives us code like:
      *
-     * result = arma_numpy.mat_to_numpy_X(GetParamWithInfo[mat](p, 'name'))
+     * result = mat_to_numpy_X(GetParamWithInfo[mat](p, 'name'))
      */
-    std::cout << prefix << "result = arma_numpy.mat_to_numpy_"
+    std::cout << prefix << "result = mat_to_numpy_"
         << GetNumpyTypeChar<arma::mat>()
-        << "(GetParamWithInfo[arma.Mat[double]](p, '" << d.name << "'))"
+        << "(GetParamWithInfo[Mat[double]](p, '" << d.name << "'))"
         << std::endl;
   }
   else
@@ -155,12 +153,11 @@ void PrintOutputProcessing(
     /**
      * This gives us code like:
      *
-     * result['param_name'] =
-     *     arma_numpy.mat_to_numpy_X(GetParamWithInfo[mat](p, 'name'))
+     * result['param_name'] = mat_to_numpy_X(GetParamWithInfo[mat](p, 'name'))
      */
     std::cout << prefix << "result['" << d.name
-        << "'] = arma_numpy.mat_to_numpy_" << GetNumpyTypeChar<arma::mat>()
-        << "(GetParamWithInfo[arma.Mat[double]](p, '" << d.name << "'))"
+        << "'] = mat_to_numpy_" << GetNumpyTypeChar<arma::mat>()
+        << "(GetParamWithInfo[Mat[double]](p, '" << d.name << "'))"
         << std::endl;
   }
 }
@@ -174,8 +171,8 @@ void PrintOutputProcessing(
     util::ParamData& d,
     const size_t indent,
     const bool onlyOutput,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<data::HasSerialize<T>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<data::HasSerialize<T>::value>* = 0)
 {
   // Get the type names we need to use.
   std::string strippedType, printedType, defaultsType;
@@ -305,11 +302,12 @@ void PrintOutputProcessing(util::ParamData& d,
                            const void* input,
                            void* /* output */)
 {
-  typedef std::tuple<util::Params, std::tuple<size_t, bool>> TupleType;
+  using TupleType = std::tuple<util::Params, std::tuple<size_t, bool>>;
   TupleType* tuple = (TupleType*) input;
 
-  PrintOutputProcessing<typename std::remove_pointer<T>::type>(std::get<0>(*tuple),
-      d, std::get<0>(std::get<1>(*tuple)), std::get<1>(std::get<1>(*tuple)));
+  PrintOutputProcessing<std::remove_pointer_t<T>>(
+      std::get<0>(*tuple), d, std::get<0>(std::get<1>(*tuple)),
+      std::get<1>(std::get<1>(*tuple)));
 }
 
 } // namespace python

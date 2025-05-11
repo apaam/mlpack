@@ -30,7 +30,7 @@ namespace mlpack {
  * @param x Input for which we have to calculate trigamma.
  */
 template<std::size_t N, typename T>
-typename std::enable_if<N == 6, T>::type
+std::enable_if_t<N == 6, T>
 EvaluatePolyPrec(const T(&a)[N], const T& x)
 {
   T x2 = x * x;
@@ -60,7 +60,7 @@ EvaluatePolyPrec(const T(&a)[N], const T& x)
  * @param x Input for which we have to calculate trigamma.
  */
 template<std::size_t N, typename T>
-typename std::enable_if<N == 7, T>::type
+std::enable_if_t<N == 7, T>
 EvaluatePolyPrec(const T(&a)[N], const T& x)
 {
   T x2 = x * x;
@@ -151,11 +151,12 @@ T TrigammaPrec(T x)
                         0.022892987908906897L
                     };
 
-  // For 1 < x <= 2.
-  if (x <= 2)
-    return (offset + EvaluatePolyPrec(P12, x) / EvaluatePolyPrec(Q12, x)) / (x * x);
-  // For 2 < x <= 4.
-  else if (x <= 4)
+  if (x <= 2) // For 1 < x <= 2.
+  {
+    return (offset + EvaluatePolyPrec(P12, x) / EvaluatePolyPrec(Q12, x)) /
+        (x * x);
+  }
+  else if (x <= 4) // For 2 < x <= 4.
   {
     T y = 1 / x;
     return (1 + EvaluatePolyPrec(P24, y) / EvaluatePolyPrec(Q24, y)) / x;
@@ -189,7 +190,7 @@ T Trigamma(T x)
 
     T s = fabs(x) < fabs(z) ? sin(M_PI * x) : sin(M_PI * z);
 
-    return -Trigamma(z) + pow(M_PI, 2) / (s * s);
+    return -Trigamma(z) + std::pow(M_PI, 2) / (s * s);
   }
 
   if (x < 1)

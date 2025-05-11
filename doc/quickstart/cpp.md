@@ -6,37 +6,50 @@ gives a few examples of usage, and pointers to deeper documentation.
 Keep in mind that mlpack also has interfaces to other languages, and quickstart
 guides for those other languages are available too.  If that is what you are
 looking for, see the quickstarts for [Python](python.md),
-[the command line](cli.md), [Julia](julia.md), [R](R.md), or [Go](go.md).
+[the command line](cli.md), [Julia](julia.md), [R](r.md), or [Go](go.md).
 
 ## Installing mlpack
 
 To use mlpack in C++, you only need the header files associated with the
 libraries, and the dependencies Armadillo and ensmallen (detailed in the
-[main README](../../README.md)).  The headers may already be pre-packaged for
-your distribution; for instance, for Ubuntu and Debian you can simply run the
-command
+[main README](../../README.md)).
+
+The headers may already be pre-packaged for your distribution;
+for instance, for Ubuntu and Debian you can simply run the command
 
 ```sh
-sudo apt-get install mlpack-dev
+sudo apt-get install libmlpack-dev
 ```
 
 and on Fedora or Red Hat:
 
 ```sh
-sudo dnf install mlpack
+sudo dnf install mlpack-devel
 ```
 
-If you run a different distribution, mlpack may be packaged under a different
-name.  And if it is not packaged, you can use a Docker image from Dockerhub:
+You can also use a Docker image from Dockerhub, 
+which has mlpack headers already installed:
 
 ```sh
 docker run -it mlpack/mlpack /bin/bash
 ```
 
-This Docker image has mlpack headers already installed.
-
 If you prefer to build mlpack from scratch, see the
 [main README](../../README.md).
+
+***Note for Ubuntu LTS Users***: The libmlpack-dev version in the Ubuntu LTS
+repositories may not always be the latest. This can lead to issues, such as
+missing header files (e.g., `mlpack.hpp` missing in versions prior to 4.0).  To
+ensure compatibility with the latest mlpack features and examples, we recommend
+building mlpack from source, as explained in the [main README](../../README.md).
+
+***Warning:*** on Ubuntu and Debian systems, older versions of OpenBLAS (0.3.26
+and older) can over-use the number of cores on your system, causing slow
+execution of mlpack programs, especially mlpack's test suite.  To prevent this,
+set `OMP_NUM_THREADS` as detailed [in the test build
+guide](../user/install.md#build-tests), or install the `libopenblas-openmp-dev`
+package on Ubuntu or Debian and remove `libopenblas-pthread-dev`.  Ubuntu 24.04,
+Debian bookworm, and older are all affected by this issue.
 
 ## Installing mlpack from vcpkg
 
@@ -51,6 +64,20 @@ cd vcpkg
 ```
 
 If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
+## Installing mlpack from Conan
+
+The mlpack recipe in [Conan](https://conan.io/) is kept up to date by the Conan team members and the community contributors.
+
+Follow the instructions on [this page on how to set up Conan](https://conan.io/downloads).
+
+Install mlpack:
+
+```shell
+conan install --requires="mlpack/[*]" --build=missing
+```
+
+If the version is outdated or there is a new release version, please [create an issue or pull request](https://github.com/conan-io/conan-center-index) on the conan-center-index repository.
 
 ## Simple quickstart example
 
@@ -132,7 +159,7 @@ example command that uses `g++`, and assumes the file above is saved as
 `cpp_quickstart_1.cpp`.
 
 ```sh
-g++ -O3 -std=c++14 -o cpp_quickstart_1 cpp_quickstart_1.cpp -larmadillo -fopenmp
+g++ -O3 -std=c++17 -o cpp_quickstart_1 cpp_quickstart_1.cpp -larmadillo -fopenmp
 ```
 
 Then, you can run the program easily:
@@ -239,7 +266,7 @@ This can be compiled the same way as before, assuming the code is saved as
 `cpp_quickstart_2.cpp`:
 
 ```sh
-g++ -O3 -std=c++14 -o cpp_quickstart_2 cpp_quickstart_2.cpp -fopenmp -larmadillo
+g++ -O3 -std=c++17 -o cpp_quickstart_2 cpp_quickstart_2.cpp -fopenmp -larmadillo
 ```
 
 And then it can be easily run:

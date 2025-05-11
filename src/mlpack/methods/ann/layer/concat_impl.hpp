@@ -123,19 +123,12 @@ void ConcatType<MatType>::Forward(const MatType& input, MatType& output)
       this->layerOutputs.size());
   for (size_t i = 0; i < this->layerOutputs.size(); ++i)
   {
-    MakeAlias(layerOutputAliases[i],
-              (typename MatType::elem_type*) this->layerOutputs[i].memptr(),
-              rows,
-              this->network[i]->OutputDimensions()[axis],
-              slices);
+    MakeAlias(layerOutputAliases[i], this->layerOutputs[i], rows,
+        this->network[i]->OutputDimensions()[axis], slices);
   }
 
   arma::Cube<typename MatType::elem_type> outputAlias;
-  MakeAlias(outputAlias,
-            (typename MatType::elem_type*) output.memptr(),
-            rows,
-            this->outputDimensions[axis],
-            slices);
+  MakeAlias(outputAlias, output, rows, this->outputDimensions[axis], slices);
 
   // Now get the columns from each output.
   size_t startCol = 0;
@@ -149,7 +142,10 @@ void ConcatType<MatType>::Forward(const MatType& input, MatType& output)
 
 template<typename MatType>
 void ConcatType<MatType>::Backward(
-    const MatType& /* input */, const MatType& gy, MatType& g)
+    const MatType& input,
+    const MatType& /* output */,
+    const MatType& gy,
+    MatType& g)
 {
   // The implementation of MultiLayer is fine: this will allocate a matrix that
   // is able to hold each child layer's delta (which has the same size as the
@@ -168,11 +164,7 @@ void ConcatType<MatType>::Backward(
     slices *= this->outputDimensions[i];
 
   arma::Cube<typename MatType::elem_type> gyTmp;
-  MakeAlias(gyTmp,
-            (typename MatType::elem_type*) gy.memptr(),
-            rows,
-            this->outputDimensions[axis],
-            slices);
+  MakeAlias(gyTmp, gy, rows, this->outputDimensions[axis], slices);
 
   size_t startCol = 0;
   for (size_t i = 0; i < this->network.size(); ++i)
@@ -181,7 +173,10 @@ void ConcatType<MatType>::Backward(
     MatType delta = gyTmp.cols(startCol, startCol + cols - 1);
     // Reshape so that the batch size is the number of columns.
     delta.reshape(delta.n_elem / gy.n_cols, gy.n_cols);
-    this->network[i]->Backward(this->layerOutputs[i], delta,
+    this->network[i]->Backward(
+        input,
+        this->layerOutputs[i],
+        delta,
         this->layerDeltas[i]);
 
     startCol += cols;
@@ -196,7 +191,8 @@ void ConcatType<MatType>::Backward(
 
 template<typename MatType>
 void ConcatType<MatType>::Backward(
-    const MatType& /* input */,
+    const MatType& input,
+    const MatType& /* output */,
     const MatType& gy,
     MatType& g,
     const size_t index)
@@ -214,11 +210,7 @@ void ConcatType<MatType>::Backward(
     slices *= this->outputDimensions[i];
 
   arma::Cube<typename MatType::elem_type> gyTmp;
-  MakeAlias(gyTmp,
-            (typename MatType::elem_type*) gy.memptr(),
-            rows,
-            this->outputDimensions[axis],
-            slices);
+  MakeAlias(gyTmp, gy, rows, this->outputDimensions[axis], slices);
 
   size_t startCol = 0;
   for (size_t i = 0; i < index; ++i)
@@ -231,7 +223,7 @@ void ConcatType<MatType>::Backward(
   // Reshape so that the batch size is the number of columns.
   delta.reshape(delta.n_elem / gy.n_cols, gy.n_cols);
 
-  this->network[index]->Backward(this->layerOutputs[index], delta, g);
+  this->network[index]->Backward(input, this->layerOutputs[index], delta, g);
 }
 
 template<typename MatType>
@@ -252,11 +244,7 @@ void ConcatType<MatType>::Gradient(
     slices *= this->outputDimensions[i];
 
   arma::Cube<typename MatType::elem_type> errorTmp;
-  MakeAlias(errorTmp,
-            (typename MatType::elem_type*) error.memptr(),
-            rows,
-            this->outputDimensions[axis],
-            slices);
+  MakeAlias(errorTmp, error, rows, this->outputDimensions[axis], slices);
 
   size_t startCol = 0;
   size_t startParam = 0;
@@ -268,10 +256,7 @@ void ConcatType<MatType>::Gradient(
     MatType err = errorTmp.cols(startCol, startCol + cols - 1);
     err.reshape(err.n_elem / input.n_cols, input.n_cols);
     MatType gradientAlias;
-    MakeAlias(gradientAlias,
-              (typename MatType::elem_type*) gradient.memptr() + startParam,
-              params,
-              1);
+    MakeAlias(gradientAlias, gradient, params, 1, startParam);
     this->network[i]->Gradient(input, err, gradientAlias);
 
     startCol += cols;
@@ -298,11 +283,7 @@ void ConcatType<MatType>::Gradient(
     slices *= this->outputDimensions[i];
 
   arma::Cube<typename MatType::elem_type> errorTmp;
-  MakeAlias(errorTmp,
-            (typename MatType::elem_type*) error.memptr(),
-            rows,
-            this->outputDimensions[axis],
-            slices);
+  MakeAlias(errorTmp, error, rows, this->outputDimensions[axis], slices);
 
   size_t startCol = 0;
   size_t startParam = 0;
@@ -318,10 +299,7 @@ void ConcatType<MatType>::Gradient(
   MatType err = errorTmp.cols(startCol, startCol + cols - 1);
   err.reshape(err.n_elem / input.n_cols, input.n_cols);
   MatType gradientAlias;
-  MakeAlias(gradientAlias,
-            (typename MatType::elem_type*) gradient.memptr() + startParam,
-            params,
-            1);
+  MakeAlias(gradientAlias, gradient, params, 1, startParam);
   this->network[index]->Gradient(input, err, gradientAlias);
 }
 

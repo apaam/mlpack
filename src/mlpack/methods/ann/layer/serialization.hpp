@@ -46,9 +46,11 @@
         mlpack::NaiveConvolution<mlpack::ValidConvolution>, \
         __VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::CELUType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::CReLUType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::DropConnectType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::DropoutType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::ELUType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::FlexibleReLUType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::GroupedConvolutionType< \
         mlpack::NaiveConvolution<mlpack::ValidConvolution>, \
         mlpack::NaiveConvolution<mlpack::FullConvolution>, \
@@ -56,19 +58,26 @@
         __VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::IdentityType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::LeakyReLUType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::LayerNormType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::Linear3DType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::LinearType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::LinearNoBiasType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::LinearRecurrentType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::LogSoftMaxType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::LSTMType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::MaxPoolingType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::MeanPoolingType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::MultiheadAttentionType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::NoisyLinearType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::PaddingType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::PReLUType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::RBFType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::ReLU6Type<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::RepeatType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::SoftmaxType<__VA_ARGS__>); \
     CEREAL_REGISTER_TYPE(mlpack::SoftminType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::HardTanHType<__VA_ARGS__>); \
+    CEREAL_REGISTER_TYPE(mlpack::FTSwishType<__VA_ARGS__>); \
 
 CEREAL_REGISTER_MLPACK_LAYERS(arma::mat);
 

@@ -35,8 +35,8 @@ typename MatType::elem_type TripletMarginLossType<MatType>::Forward(
   MatType positive =
       prediction.submat(prediction.n_rows / 2, 0, prediction.n_rows - 1,
       prediction.n_cols - 1);
-  return std::max(0.0, arma::accu(arma::pow(anchor - positive, 2)) -
-      arma::accu(arma::pow(anchor - target, 2)) + margin) / anchor.n_cols;
+  return std::max(0.0, accu(pow(anchor - positive, 2)) -
+      accu(pow(anchor - target, 2)) + margin) / anchor.n_cols;
 }
 
 template<typename MatType>
@@ -55,7 +55,7 @@ template<typename MatType>
 template<typename Archive>
 void TripletMarginLossType<MatType>::serialize(
     Archive& ar,
-    const unsigned int /* version */)
+    const uint32_t /* version */)
 {
   ar(CEREAL_NVP(margin));
 }

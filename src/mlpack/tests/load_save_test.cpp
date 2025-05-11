@@ -193,12 +193,71 @@ TEST_CASE("LoadSparseTXTTest", "[LoadSaveTest]")
   double temp = 0.1;
   for (int i = 0; it != it_end; ++it, temp += 0.1, ++i)
   {
-    REQUIRE((double)(*it) == Approx(temp).epsilon(1e-7));
-    REQUIRE((int)(it.row()) == i + 1);
-    REQUIRE((int)it.col() == i + 2);
+    REQUIRE((double) (*it) == Approx(temp).epsilon(1e-7));
+    REQUIRE((int) (it.row()) == i + 1);
+    REQUIRE((int) it.col() == i + 2);
   }
   // Remove the file.
   remove("test_sparse_file.txt");
+}
+
+/**
+ * Make sure sparse coordinate list autodetection works.
+ */
+TEST_CASE("LoadSparseAutodetectTest", "[LoadSaveTest]")
+{
+  fstream f;
+  f.open("test_file.csv", fstream::out);
+
+  f << "1, 3, 4.0" << endl;
+  f << "2, 4, 5.0" << endl;
+  f << "3, 6, -3.0" << endl;
+
+  f.close();
+
+  arma::sp_mat test;
+
+  REQUIRE(data::Load("test_file.csv", test, true) == true);
+
+  REQUIRE(test.n_rows == 7);
+  REQUIRE(test.n_cols == 4);
+
+  REQUIRE(test.at(3, 1) == Approx(4.0));
+  REQUIRE(test.at(4, 2) == Approx(5.0));
+  REQUIRE(test.at(6, 3) == Approx(-3.0));
+
+  remove("test_file.csv");
+}
+
+/**
+ * Make sure sparse coordinate list autodetection fails when the number of
+ * columns is wrong.
+ */
+TEST_CASE("LoadSparseAutodetectNotCoordinateListTest", "[LoadSaveTest]")
+{
+  fstream f;
+  f.open("test_file.csv", fstream::out);
+
+  f << "1, 0, 0, 4" << endl;
+  f << "0, 1, 0, 3" << endl;
+  f << "1, 0, 0, 0" << endl;
+
+  f.close();
+
+  arma::sp_mat test;
+
+  REQUIRE(data::Load("test_file.csv", test, true) == true);
+
+  REQUIRE(test.n_rows == 4);
+  REQUIRE(test.n_cols == 3);
+
+  REQUIRE(test.at(0, 0) == Approx(1.0));
+  REQUIRE(test.at(3, 0) == Approx(4.0));
+  REQUIRE(test.at(1, 1) == Approx(1.0));
+  REQUIRE(test.at(3, 1) == Approx(3.0));
+  REQUIRE(test.at(0, 2) == Approx(1.0));
+
+  remove("test_file.csv");
 }
 
 /**
@@ -306,41 +365,6 @@ TEST_CASE("SaveCSVTest", "[LoadSaveTest]")
 }
 
 /**
- * Make sure a TSV is saved correctly for a sparse matrix
- */
-TEST_CASE("SaveSparseTSVTest", "[LoadSaveTest]")
-{
-  arma::sp_mat test = "0.1\t0\t0\t0;"
-                      "0\t0.2\t0\t0;"
-                      "0\t0\t0.3\t0;"
-                      "0\t0\t0\t0.4;";
-
-  REQUIRE(data::Save("test_sparse_file.tsv", test, true, false) == true);
-
-  // Load it in and make sure it is the same.
-  arma::sp_mat test2;
-  REQUIRE(data::Load("test_sparse_file.tsv", test2, true, false) == true);
-
-  REQUIRE(test2.n_rows == 4);
-  REQUIRE(test2.n_cols == 4);
-
-  arma::sp_mat::const_iterator it = test2.begin();
-  arma::sp_mat::const_iterator it_end = test2.end();
-
-  double temp = 0.1;
-  for (int i = 0; it != it_end; ++it, temp += 0.1, ++i)
-  {
-    double val = (*it);
-    REQUIRE(val == Approx(temp).epsilon(1e-7));
-    REQUIRE((int)(it.row()) == i);
-    REQUIRE((int)it.col() == i);
-  }
-
-  // Remove the file.
-  remove("test_sparse_file.tsv");
-}
-
-/**
  * Make sure a TXT is saved correctly for a sparse matrix
  */
 TEST_CASE("SaveSparseTXTTest", "[LoadSaveTest]")
@@ -402,8 +426,8 @@ TEST_CASE("SaveSparseBinaryTest", "[LoadSaveTest]")
   {
     double val = (*it);
     REQUIRE(val == Approx(temp).epsilon(1e-7));
-    REQUIRE((int)(it.row()) == i);
-    REQUIRE((int)it.col() == i);
+    REQUIRE((int) (it.row()) == i);
+    REQUIRE((int) it.col() == i);
   }
 
   // Remove the file.
@@ -2233,8 +2257,7 @@ TEST_CASE("BadDatasetInfoARFFTest", "[LoadSaveTest]")
   arma::mat dataset;
   DatasetInfo info(6);
 
-  REQUIRE_THROWS_AS(data::LoadARFF("test.arff", dataset, info),
-      std::invalid_argument);
+  REQUIRE_THROWS(data::LoadARFF("test.arff", dataset, info, true));
 
   remove("test.arff");
 }
@@ -2247,8 +2270,7 @@ TEST_CASE("NonExistentFileARFFTest", "[LoadSaveTest]")
   arma::mat dataset;
   DatasetInfo info;
 
-  REQUIRE_THROWS_AS(data::LoadARFF("nonexistentfile.arff", dataset, info),
-      std::runtime_error);
+  REQUIRE_THROWS(data::LoadARFF("nonexistentfile.arff", dataset, info, true));
 }
 
 /**
@@ -2261,7 +2283,7 @@ TEST_CASE("CaseTest", "[LoadSaveTest]")
 
   DatasetMapper<IncrementPolicy> info;
 
-  LoadARFF<double, IncrementPolicy>("casecheck.arff", dataset, info);
+  LoadARFF<double, IncrementPolicy>("casecheck.arff", dataset, info, true);
 
   REQUIRE(dataset.n_rows == 2);
   REQUIRE(dataset.n_cols == 3);
@@ -2486,13 +2508,22 @@ TEST_CASE("LoadCSVHeaderTest", "[LoadSaveTest]")
 {
   fstream f;
   f.open("test.csv", fstream::out);
-  f << "a, b, c, d" << endl;
-  f << "1, 2, 3, 4" << endl;
-  f << "5, 6, 7, 8" << endl;
+  f << "a,b,c,d" << endl;
+  f << "1,2,3,4" << endl;
+  f << "5,6,7,8" << endl;
 
   arma::mat dataset;
-  data::Load("test.csv", dataset);
+  data::TextOptions opts;
+  opts.HasHeaders() = true;
+  data::Load("test.csv", dataset, opts);
+
+  arma::field<std::string> headers = opts.Headers();
 
   REQUIRE(dataset.n_rows == 4);
   REQUIRE(dataset.n_cols == 2);
+  REQUIRE(headers.n_elem == 4);
+  REQUIRE(headers.at(0) == "a");
+  REQUIRE(headers.at(1) == "b");
+  REQUIRE(headers.at(2) == "c");
+  REQUIRE(headers.at(3) == "d");
 }

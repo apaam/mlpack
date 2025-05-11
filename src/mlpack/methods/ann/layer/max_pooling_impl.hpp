@@ -139,7 +139,10 @@ void MaxPoolingType<MatType>::Forward(const MatType& input, MatType& output)
 
 template<typename MatType>
 void MaxPoolingType<MatType>::Backward(
-    const MatType& input, const MatType& gy, MatType& g)
+    const MatType& input,
+    const MatType& /* output */,
+    const MatType& gy,
+    MatType& g)
 {
   arma::Cube<typename MatType::elem_type> mappedError =
       arma::Cube<typename MatType::elem_type>(((MatType&) gy).memptr(),
@@ -157,7 +160,8 @@ void MaxPoolingType<MatType>::Backward(
   #pragma omp parallel for
   for (size_t s = 0; s < (size_t) mappedError.n_slices; s++)
   {
-    UnpoolingOperation(mappedError.slice(s), gTemp.slice(s), poolingIndices.slice(s));
+    UnpoolingOperation(mappedError.slice(s), gTemp.slice(s),
+        poolingIndices.slice(s));
   }
 }
 

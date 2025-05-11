@@ -32,7 +32,7 @@ class RPTreeMaxSplit
 {
  public:
   //! The element type held by the matrix type.
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
   //! An information about the partition.
   struct SplitInfo
   {
@@ -114,7 +114,7 @@ class RPTreeMaxSplit
   template<typename VecType>
   static bool AssignToLeftNode(const VecType& point, const SplitInfo& splitInfo)
   {
-    return (arma::dot(point, splitInfo.direction) <= splitInfo.splitVal);
+    return (dot(point, splitInfo.direction) <= splitInfo.splitVal);
   }
 
  private:

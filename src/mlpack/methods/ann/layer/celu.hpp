@@ -73,7 +73,7 @@ class CELUType : public Layer<MatType>
 
 
   // Virtual destructor
-  virtual ~CELUType(){};
+  virtual ~CELUType() { }
 
   //Copy constructor
   CELUType(const CELUType& other);
@@ -101,11 +101,15 @@ class CELUType : public Layer<MatType>
    * f(x) by propagating x backwards through f. Using the results from the feed
    * forward pass.
    *
-   * @param input The propagated input activation f(x).
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  void Backward(const MatType& input, const MatType& gy, MatType& g);
+  void Backward(const MatType& /* input */,
+                const MatType& /* output */,
+                const MatType& gy,
+                MatType& g);
 
   //! Get the non zero gradient.
   double const& Alpha() const { return alpha; }
@@ -127,7 +131,7 @@ class CELUType : public Layer<MatType>
 // Convenience typedefs.
 
 // Standard CELU layer.
-typedef CELUType<arma::mat> CELU;
+using CELU = CELUType<arma::mat>;
 
 } // namespace mlpack
 

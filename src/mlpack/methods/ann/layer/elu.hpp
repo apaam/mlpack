@@ -128,7 +128,7 @@ class ELUType : public Layer<MatType>
   ELUType* Clone() const { return new ELUType(*this); }
 
   // Virtual destructor.
-  virtual ~ELUType() {};
+  virtual ~ELUType() { }
 
   // Copy constructor.
   ELUType(const ELUType& other);
@@ -156,11 +156,15 @@ class ELUType : public Layer<MatType>
    * f(x) by propagating x backwards through f. Using the results from the feed
    * forward pass.
    *
-   * @param input The propagated input activation f(x).
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  void Backward(const MatType& input, const MatType& gy, MatType& g);
+  void Backward(const MatType& /* input */,
+                const MatType& /* output */,
+                const MatType& gy,
+                MatType& g);
 
   //! Get the non zero gradient.
   double const& Alpha() const { return alpha; }
@@ -194,10 +198,10 @@ class ELUType : public Layer<MatType>
 // Convenience typedefs.
 
 // ELU layer.
-typedef ELUType<arma::mat> ELU;
+using ELU = ELUType<arma::mat>;
 
 // SELU layer.
-typedef ELUType<arma::mat> SELU;
+using SELU = ELUType<arma::mat>;
 
 } // namespace mlpack
 

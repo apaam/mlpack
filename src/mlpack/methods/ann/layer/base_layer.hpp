@@ -30,6 +30,8 @@
 #include <mlpack/methods/ann/activation_functions/hard_swish_function.hpp>
 #include <mlpack/methods/ann/activation_functions/tanh_exponential_function.hpp>
 #include <mlpack/methods/ann/activation_functions/silu_function.hpp>
+#include <mlpack/methods/ann/activation_functions/hyper_sinh_function.hpp>
+#include <mlpack/methods/ann/activation_functions/bipolar_sigmoid_function.hpp>
 #include "layer.hpp"
 
 namespace mlpack {
@@ -60,7 +62,8 @@ namespace mlpack {
  */
 template <
     class ActivationFunction = LogisticFunction,
-    typename MatType = arma::mat
+    typename MatType = arma::mat,
+    bool DerivRequiresOutput = true
 >
 class BaseLayer : public Layer<MatType>
 {
@@ -97,14 +100,18 @@ class BaseLayer : public Layer<MatType>
    * Backward pass: compute the function f(x) by propagating x backwards through
    * f, using the results from the forward pass.
    *
-   * @param input The propagated input activation.
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  void Backward(const MatType& input, const MatType& gy, MatType& g)
+  void Backward(const MatType& input,
+                const MatType& output,
+                const MatType& gy,
+                MatType& g)
   {
     MatType derivative;
-    ActivationFunction::Deriv(input, derivative);
+    ActivationFunction::Deriv(input, output, derivative);
     g = gy % derivative;
   }
 
@@ -124,7 +131,7 @@ class BaseLayer : public Layer<MatType>
 /**
  * Standard Sigmoid-Layer using the logistic activation function.
  */
-typedef BaseLayer<LogisticFunction, arma::mat> Sigmoid;
+using Sigmoid = BaseLayer<LogisticFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using SigmoidType = BaseLayer<LogisticFunction, MatType>;
@@ -132,7 +139,7 @@ using SigmoidType = BaseLayer<LogisticFunction, MatType>;
 /**
  * Standard rectified linear unit non-linearity layer.
  */
-typedef BaseLayer<RectifierFunction, arma::mat> ReLU;
+using ReLU = BaseLayer<RectifierFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using ReLUType = BaseLayer<RectifierFunction, MatType>;
@@ -140,7 +147,7 @@ using ReLUType = BaseLayer<RectifierFunction, MatType>;
 /**
  * Standard hyperbolic tangent layer.
  */
-typedef BaseLayer<TanhFunction, arma::mat> TanH;
+using TanH = BaseLayer<TanhFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using TanHType = BaseLayer<TanhFunction, MatType>;
@@ -148,7 +155,7 @@ using TanHType = BaseLayer<TanhFunction, MatType>;
 /**
  * Standard Softplus-Layer using the Softplus activation function.
  */
-typedef BaseLayer<SoftplusFunction, arma::mat> SoftPlus;
+using SoftPlus = BaseLayer<SoftplusFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using SoftPlusType = BaseLayer<SoftplusFunction, MatType>;
@@ -156,7 +163,7 @@ using SoftPlusType = BaseLayer<SoftplusFunction, MatType>;
 /**
  * Standard HardSigmoid-Layer using the HardSigmoid activation function.
  */
-typedef BaseLayer<HardSigmoidFunction, arma::mat> HardSigmoid;
+using HardSigmoid = BaseLayer<HardSigmoidFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using HardSigmoidType = BaseLayer<HardSigmoidFunction, MatType>;
@@ -164,7 +171,7 @@ using HardSigmoidType = BaseLayer<HardSigmoidFunction, MatType>;
 /**
  * Standard Swish-Layer using the Swish activation function.
  */
-typedef BaseLayer<SwishFunction, arma::mat> Swish;
+using Swish = BaseLayer<SwishFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using SwishType = BaseLayer<SwishFunction, MatType>;
@@ -172,7 +179,7 @@ using SwishType = BaseLayer<SwishFunction, MatType>;
 /**
  * Standard Mish-Layer using the Mish activation function.
  */
-typedef BaseLayer<MishFunction, arma::mat> Mish;
+using Mish = BaseLayer<MishFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using MishType = BaseLayer<MishFunction, MatType>;
@@ -180,7 +187,7 @@ using MishType = BaseLayer<MishFunction, MatType>;
 /**
  * Standard LiSHT-Layer using the LiSHT activation function.
  */
-typedef BaseLayer<LiSHTFunction, arma::mat> LiSHT;
+using LiSHT = BaseLayer<LiSHTFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using LiSHTType = BaseLayer<LiSHTFunction, MatType>;
@@ -188,7 +195,7 @@ using LiSHTType = BaseLayer<LiSHTFunction, MatType>;
 /**
  * Standard GELU-Layer using the GELU activation function.
  */
-typedef BaseLayer<GELUFunction, arma::mat> GELU;
+using GELU = BaseLayer<GELUFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using GELUType = BaseLayer<GELUFunction, MatType>;
@@ -196,7 +203,7 @@ using GELUType = BaseLayer<GELUFunction, MatType>;
 /**
  * Standard Elliot-Layer using the Elliot activation function.
  */
-typedef BaseLayer<ElliotFunction, arma::mat> Elliot;
+using Elliot = BaseLayer<ElliotFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using ElliotType = BaseLayer<ElliotFunction, MatType>;
@@ -204,7 +211,7 @@ using ElliotType = BaseLayer<ElliotFunction, MatType>;
 /**
  * Standard ELiSH-Layer using the ELiSH activation function.
  */
-typedef BaseLayer<ElishFunction, arma::mat> Elish;
+using Elish = BaseLayer<ElishFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using ElishType = BaseLayer<ElishFunction, MatType>;
@@ -212,7 +219,7 @@ using ElishType = BaseLayer<ElishFunction, MatType>;
 /**
  * Standard Gaussian-Layer using the Gaussian activation function.
  */
-typedef BaseLayer<GaussianFunction, arma::mat> Gaussian;
+using Gaussian = BaseLayer<GaussianFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using GaussianType = BaseLayer<GaussianFunction, MatType>;
@@ -220,7 +227,7 @@ using GaussianType = BaseLayer<GaussianFunction, MatType>;
 /**
  * Standard HardSwish-Layer using the HardSwish activation function.
  */
-typedef BaseLayer<HardSwishFunction, arma::mat> HardSwish;
+using HardSwish = BaseLayer<HardSwishFunction, arma::mat>;
 
 template <typename MatType = arma::mat>
 using HardSwishType = BaseLayer<HardSwishFunction, MatType>;
@@ -228,7 +235,7 @@ using HardSwishType = BaseLayer<HardSwishFunction, MatType>;
 /**
  * Standard TanhExp-Layer using the TanhExp activation function.
  */
-typedef BaseLayer<TanhExpFunction, arma::mat> TanhExp;
+using TanhExp = BaseLayer<TanhExpFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using TanhExpType = BaseLayer<TanhExpFunction, MatType>;
@@ -236,10 +243,26 @@ using TanhExpType = BaseLayer<TanhExpFunction, MatType>;
 /**
  * Standard SILU-Layer using the SILU activation function.
  */
-typedef BaseLayer<SILUFunction, arma::mat> SILU;
+using SILU = BaseLayer<SILUFunction, arma::mat>;
 
 template<typename MatType = arma::mat>
 using SILUType = BaseLayer<SILUFunction, MatType>;
+
+/**
+ * Standard Hyper Sinh layer.
+ */
+using HyperSinh = BaseLayer<HyperSinhFunction, arma::mat>;
+
+template<typename MatType = arma::mat>
+using HyperSinhType = BaseLayer<HyperSinhFunction, MatType>;
+
+/**
+ * Standard Bipolar Sigmoid layer.
+ */
+using BipolarSigmoid = BaseLayer<BipolarSigmoidFunction, arma::mat>;
+
+template<typename MatType = arma::mat>
+using BipolarSigmoidType = BaseLayer<BipolarSigmoidFunction, MatType>;
 
 } // namespace mlpack
 

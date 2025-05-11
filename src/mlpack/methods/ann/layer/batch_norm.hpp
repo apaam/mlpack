@@ -54,7 +54,7 @@ class BatchNormType : public Layer<MatType>
 {
  public:
   /**
-   * Create the BatchNorm object. 
+   * Create the BatchNorm object.
    *
    * With batch normalization, the same exact normalization is applied to every
    * element in an individual channel.  To control what axes normalization is
@@ -67,20 +67,20 @@ class BatchNormType : public Layer<MatType>
    * will be 0, and thus every element of the input will have a different
    * normalization applied to it.
    *
-   * As an example, if we have a 3-dimensional input (call the 
-   * three dimensions rows, columns and slices), and `minAxis` & `maxAxis` is 
+   * As an example, if we have a 3-dimensional input (call the
+   * three dimensions rows, columns and slices), and `minAxis` & `maxAxis` is
    * 2, then we apply the same normalization across different slices.
    */
   BatchNormType();
 
   /**
-   * Create the BatchNorm layer object for a specified axis of input units as 
+   * Create the BatchNorm layer object for a specified axis of input units as
    * channels.  With batch normalization, the same exact normalization is
    * applied to every element in an individual channel.  To control what axes
    * normalization is applied to, set the `minAxis` and `maxAxis` parameters.
-   * 
+   *
    * As an example, if we have a 3-dimensional input (call the three dimensions
-   * rows, columns and slices), and `minAxis` is 1 & `maxAxis` is 2, then the 
+   * rows, columns and slices), and `minAxis` is 1 & `maxAxis` is 2, then the
    * number of channels is equal to `columns * slices`.
    *
    * @param minAxis The min axis along which BatchNorm is applied. Before that,
@@ -97,7 +97,7 @@ class BatchNormType : public Layer<MatType>
                 const double eps = 1e-8,
                 const bool average = true,
                 const double momentum = 0.1);
-  
+
   virtual ~BatchNormType() { }
 
   //! Clone the BatchNormType object. This handles polymorphism correctly.
@@ -106,19 +106,21 @@ class BatchNormType : public Layer<MatType>
   //! Copy the other BatchNorm layer (but not weights).
   BatchNormType(const BatchNormType& layer);
 
-  //! Take ownership of the members of the other BatchNorm layer (but not weights).
+  //! Take ownership of the members of the other BatchNorm layer (but not
+  //! weights).
   BatchNormType(BatchNormType&& layer);
 
   //! Copy the other BatchNorm layer (but not weights).
   BatchNormType& operator=(const BatchNormType& layer);
 
-  //! Take ownership of the members of the other BatchNorm layer (but not weights).
+  //! Take ownership of the members of the other BatchNorm layer (but not
+  //! weights).
   BatchNormType& operator=(BatchNormType&& layer);
 
   /**
    * Reset the layer parameters.
    */
-  void SetWeights(typename MatType::elem_type* weightsPtr);
+  void SetWeights(const MatType& weightsIn);
 
   /**
    * Initialize the weight matrix of the layer.
@@ -126,9 +128,7 @@ class BatchNormType : public Layer<MatType>
    * @param W Weight matrix to initialize.
    * @param elements Number of elements.
    */
-  void CustomInitialize(
-      MatType& W,
-      const size_t elements);
+  void CustomInitialize(MatType& W, const size_t elements);
 
   /**
    * Forward pass of the Batch Normalization layer. Transforms the input data
@@ -143,11 +143,13 @@ class BatchNormType : public Layer<MatType>
   /**
    * Backward pass through the layer.
    *
-   * @param input The input activations
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
-  void Backward(const MatType& input,
+  void Backward(const MatType& /* input */,
+                const MatType& /* output */,
                 const MatType& gy,
                 MatType& g);
 
@@ -158,14 +160,22 @@ class BatchNormType : public Layer<MatType>
    * @param error The calculated error
    * @param gradient The calculated gradient.
    */
-  void Gradient(const MatType& input,
-                const MatType& error,
-                MatType& gradient);
+  void Gradient(const MatType& input, const MatType& error, MatType& gradient);
 
   //! Get the parameters.
   const MatType& Parameters() const { return weights; }
   //! Modify the parameters.
   MatType& Parameters() { return weights; }
+
+  //! Get the gamma.
+  const MatType& Gamma() const { return gamma; }
+  //! Modify the gamma.
+  MatType& Gamma() { return gamma; }
+
+  //! Get the beta.
+  const MatType& Beta() const { return beta; }
+  //! Modify the beta.
+  MatType& Beta() { return beta; }
 
   //! Get the mean over the training data.
   const MatType& TrainingMean() const { return runningMean; }
@@ -181,7 +191,9 @@ class BatchNormType : public Layer<MatType>
   size_t InputSize() const { return size; }
 
   //! Get the epsilon value.
-  double Epsilon() const { return eps; }
+  const double &Epsilon() const { return eps; }
+  //! Modify the epsilon.
+  double& Epsilon() { return eps; }
 
   //! Get the momentum value.
   double Momentum() const { return momentum; }
@@ -233,8 +245,8 @@ class BatchNormType : public Layer<MatType>
   //! Locally-stored running mean/variance counter.
   size_t count;
 
-  //! Locally-stored number of input dimensions that we are applying 
-  //! batch normalization over.  (This is the product of this->inputDimensions 
+  //! Locally-stored number of input dimensions that we are applying
+  //! batch normalization over.  (This is the product of this->inputDimensions
   //! from index 0 to (minAxis - 1)).
   size_t inputDimension;
 
@@ -242,7 +254,7 @@ class BatchNormType : public Layer<MatType>
   //! dimensions between minAxis and maxAxis, inclusive.)
   size_t size;
 
-  //! Locally-stored number of higher dimension we are not applying 
+  //! Locally-stored number of higher dimension we are not applying
   //! batch normalization to.  This is the product of this->inputDimensions
   //! for all dimensions greater than or equal to maxAxis.
   size_t higherDimension;
@@ -263,7 +275,7 @@ class BatchNormType : public Layer<MatType>
 // Convenience typedefs.
 
 // Standard Adaptive max pooling layer.
-typedef BatchNormType<arma::mat> BatchNorm;
+using BatchNorm = BatchNormType<arma::mat>;
 
 } // namespace mlpack
 

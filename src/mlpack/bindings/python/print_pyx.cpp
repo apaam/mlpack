@@ -40,7 +40,7 @@ void PrintPYX(const util::BindingDetails& doc,
   util::Params params = IO::Parameters(bindingName);
 
   std::map<std::string, util::ParamData>& parameters = params.Parameters();
-  typedef std::map<std::string, util::ParamData>::iterator ParamIter;
+  using ParamIter = std::map<std::string, util::ParamData>::iterator;
 
   // Split into input and output parameters.  Take two passes on the input
   // parameters, so that we get the required ones first.
@@ -73,19 +73,22 @@ void PrintPYX(const util::BindingDetails& doc,
   // First, we must generate the header comment.
 
   // Now import all the necessary packages.
-  cout << "cimport arma" << endl;
-  cout << "cimport arma_numpy" << endl;
-  cout << "from io cimport IO" << endl;
-  cout << "from params cimport Params" << endl;
-  cout << "from timers cimport Timers" << endl;
-  cout << "from io cimport SetParam, SetParamPtr, SetParamWithInfo, "
+  cout << "from .arma cimport Mat, Row, Col" << endl;
+  cout << "from .arma_numpy cimport numpy_to_mat_d, numpy_to_mat_s, "
+      << "mat_to_numpy_d, mat_to_numpy_s, numpy_to_row_d, numpy_to_row_s, "
+      << "row_to_numpy_d, row_to_numpy_s, numpy_to_col_d, numpy_to_col_s, "
+      << "col_to_numpy_d, col_to_numpy_s" << endl;
+  cout << "from .io cimport IO" << endl;
+  cout << "from .params cimport Params" << endl;
+  cout << "from .timers cimport Timers" << endl;
+  cout << "from .io cimport SetParam, SetParamPtr, SetParamWithInfo, "
       << "GetParamPtr" << endl;
-  cout << "from io cimport EnableVerbose, DisableVerbose, DisableBacktrace, "
+  cout << "from .io cimport EnableVerbose, DisableVerbose, DisableBacktrace, "
       << "ResetTimers, EnableTimers" << endl;
-  cout << "from matrix_utils import to_matrix, to_matrix_with_info" << endl;
-  cout << "from preprocess_json_params import process_params_out, "
+  cout << "from .matrix_utils import to_matrix, to_matrix_with_info" << endl;
+  cout << "from .preprocess_json_params import process_params_out, "
       << "process_params_in" << endl;
-  cout << "from serialization cimport SerializeIn, SerializeOut, "
+  cout << "from .serialization cimport SerializeIn, SerializeOut, "
       << "SerializeOutJSON, SerializeInJSON" << endl;
   cout << endl;
   cout << "import numpy as np" << endl;
@@ -255,7 +258,7 @@ void PrintPYX(const util::BindingDetails& doc,
   cout << "  result = {}" << endl;
   cout << endl;
 
-  typedef std::tuple<util::Params, std::tuple<size_t, bool>> TupleType;
+  using TupleType = std::tuple<util::Params, std::tuple<size_t, bool>>;
 
   for (size_t i = 0; i < outputOptions.size(); ++i)
   {

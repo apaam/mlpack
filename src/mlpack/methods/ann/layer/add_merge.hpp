@@ -12,7 +12,6 @@
 #ifndef MLPACK_METHODS_ANN_LAYER_ADD_MERGE_HPP
 #define MLPACK_METHODS_ANN_LAYER_ADD_MERGE_HPP
 
-#include "../make_alias.hpp"
 #include "multi_layer.hpp"
 
 namespace mlpack {
@@ -47,7 +46,7 @@ class AddMergeType : public MultiLayer<MatType>
   //! Virtual destructor: delete all held layers.
   virtual ~AddMergeType()
   {
-    // Nothing to do here. 
+    // Nothing to do here.
   }
 
   //! Create a copy of the AddMergeType (this is safe for polymorphic use).
@@ -67,11 +66,13 @@ class AddMergeType : public MultiLayer<MatType>
    * input, calculating the function f(x) by propagating x backwards through f.
    * Using the results from the feed forward pass.
    *
-   * @param input The propagated input activation.
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
   void Backward(const MatType& input,
+                const MatType& output,
                 const MatType& gy,
                 MatType& g);
 
@@ -94,7 +95,7 @@ class AddMergeType : public MultiLayer<MatType>
   void serialize(Archive& ar, const uint32_t /* version */);
 };
 
-typedef AddMergeType<arma::mat> AddMerge;
+using AddMerge = AddMergeType<arma::mat>;
 
 } // namespace mlpack
 

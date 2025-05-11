@@ -81,7 +81,7 @@ class Layer
   { /* Nothing to do here */ }
 
   //! Copy assignment operator.  This is not responsible for copying weights!
-  virtual Layer& operator=(const Layer& layer)
+  Layer& operator=(const Layer& layer)
   {
     if (&layer != this)
     {
@@ -95,7 +95,7 @@ class Layer
   }
 
   //! Move assignment operator.  This is not responsible for moving weights!
-  virtual Layer& operator=(Layer&& layer)
+  Layer& operator=(Layer&& layer)
   {
     if (&layer != this)
     {
@@ -151,11 +151,13 @@ class Layer
    * downstream gradients (g). We assume that the upstream gradient (gy) has
    * already been computed and is passed to the layer.
    *
-   * @param * (input) The propagated input activation.
+   * @param * (input) The input data (x) given to the forward pass.
+   * @param * (output) The propagated data (f(x)) resulting from Forward()
    * @param * (gy) The backpropagated error.
    * @param * (g) The calculated gradient.
    */
   virtual void Backward(const MatType& /* input */,
+                        const MatType& /* output */,
                         const MatType& /* gy */,
                         MatType& /* g */)
   { /* Nothing to do here */ }
@@ -189,7 +191,7 @@ class Layer
    *    implementations should use MakeAlias() with weightsPtr to wrap the
    *    weights of a layer.
    */
-  virtual void SetWeights(typename MatType::elem_type* /* weightsPtr */) { }
+  virtual void SetWeights(const MatType& /* weightsIn */) { }
 
   /**
    * Get the total number of trainable weights in the layer.
@@ -218,7 +220,7 @@ class Layer
 
   //! Get the layer loss.  Overload this if the layer should add any extra loss
   //! to the loss function when computing the objective.  (TODO: better comment)
-  virtual double Loss() { return 0; }
+  virtual double Loss() const { return 0; }
 
   //! Get the input dimensions.
   const std::vector<size_t>& InputDimensions() const { return inputDimensions; }

@@ -29,8 +29,7 @@ typename MatType::elem_type MeanSquaredErrorType<MatType>::Forward(
     const MatType& prediction,
     const MatType& target)
 {
-  typename MatType::elem_type lossSum =
-      arma::accu(arma::square(prediction - target));
+  typename MatType::elem_type lossSum = accu(square(prediction - target));
 
   if (reduction)
     return lossSum;
@@ -47,7 +46,7 @@ void MeanSquaredErrorType<MatType>::Backward(
   loss = 2 * (prediction - target);
 
   if (!reduction)
-    loss = loss / target.n_elem;
+    loss = loss / target.n_rows /* ignore batch size */;
 }
 
 template<typename MatType>

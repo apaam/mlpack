@@ -1,6 +1,7 @@
 /**
  * @file core/data/load.hpp
  * @author Ryan Curtin
+ * @author Omar Shrit
  *
  * Load an Armadillo matrix from file.  This is necessary because Armadillo does
  * not transpose matrices on input, and it allows us to give better error
@@ -15,18 +16,54 @@
 #define MLPACK_CORE_DATA_LOAD_HPP
 
 #include <mlpack/prereqs.hpp>
-#include <string>
 
+#include "text_options.hpp"
 #include "format.hpp"
 #include "dataset_mapper.hpp"
 #include "detect_file_type.hpp"
 #include "image_info.hpp"
-#include "load_csv.hpp"
 #include "load_arff.hpp"
+#include "load_numeric.hpp"
+#include "load_categorical.hpp"
 #include "load_image.hpp"
+#include "utilities.hpp"
 
 namespace mlpack {
 namespace data /** Functions to load and save matrices and models. */ {
+
+/**
+ * Loads a matrix from file, guessing the filetype from the extension.  This
+ * will load with the options specified in `opts`.
+ *
+ * @param filename Name of file to load.
+ * @param matrix Matrix to load contents of file into.
+ * @param opts DataOptions to be passed to the function
+ * @return Boolean value indicating success or failure of load.
+ */
+template<typename MatType, typename DataOptionsType>
+bool Load(const std::string& filename,
+          MatType& matrix,
+          DataOptionsType& opts,
+          std::enable_if_t<IsArma<MatType>::value ||
+              IsSparseMat<MatType>::value>* = 0,
+          std::enable_if_t<!std::is_same_v<DataOptionsType, bool>>* = 0);
+
+/**
+ * Loads a matrix from file, guessing the filetype from the extension.  This
+ * will load with the options specified in `opts`.
+ *
+ * @param filename Name of file to load.
+ * @param matrix Matrix to load contents of file into.
+ * @param opts Non-modifiable DataOptions to be passed to the function
+ * @return Boolean value indicating success or failure of load.
+ */
+template<typename MatType, typename DataOptionsType>
+bool Load(const std::string& filename,
+          MatType& matrix,
+          const DataOptionsType& opts,
+          std::enable_if_t<IsArma<MatType>::value ||
+              IsSparseMat<MatType>::value>* = 0,
+          std::enable_if_t<!std::is_same_v<DataOptionsType, bool>>* = 0);
 
 /**
  * Loads a matrix from file, guessing the filetype from the extension.  This
@@ -83,6 +120,7 @@ bool Load(const std::string& filename,
  *
  * The supported types of files are the same as found in Armadillo:
  *
+ *  - CSV (coord_ascii), denoted by .csv or .txt
  *  - TSV (coord_ascii), denoted by .tsv or .txt
  *  - TXT (coord_ascii), denoted by .txt
  *  - Raw binary (raw_binary), denoted by .bin
@@ -109,7 +147,8 @@ template<typename eT>
 bool Load(const std::string& filename,
           arma::SpMat<eT>& matrix,
           const bool fatal = false,
-          const bool transpose = true);
+          const bool transpose = true,
+          const FileType inputLoadType = FileType::AutoDetect);
 
 /**
  * Load a column vector from a file, guessing the filetype from the extension.
@@ -248,7 +287,8 @@ bool Load(const std::string& filename,
           const std::string& name,
           T& t,
           const bool fatal = false,
-          format f = format::autodetect);
+          format f = format::autodetect,
+          std::enable_if_t<HasSerialize<T>::value>* = 0);
 
 } // namespace data
 } // namespace mlpack

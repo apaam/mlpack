@@ -90,8 +90,6 @@ bool Load(const std::vector<std::string>& files,
   return true;
 }
 
-#ifdef HAS_STB
-
 inline bool LoadImage(const std::string& filename,
                       arma::Mat<unsigned char>& matrix,
                       ImageInfo& info,
@@ -154,39 +152,18 @@ inline bool LoadImage(const std::string& filename,
 
   info.Width() = tempWidth;
   info.Height() = tempHeight;
-  info.Channels() = tempChannels;
+  // Only set the new number of channels if we didn't force grayscale loading.
+  if (info.Channels() != 1)
+    info.Channels() = tempChannels;
 
   // Copy image into armadillo Mat.
   matrix = arma::Mat<unsigned char>(image, info.Width() * info.Height() *
       info.Channels(), 1, true, true);
 
   // Free the image pointer.
-  free(image);
+  stbi_image_free(image);
   return true;
 }
-
-#else // HAS_STB
-
-inline bool LoadImage(const std::string& /* filename */,
-                      arma::Mat<unsigned char>& /* matrix */,
-                      ImageInfo& /* info */,
-                      const bool fatal)
-{
-  if (fatal)
-  {
-    Log::Fatal << "Load(): mlpack was not compiled with STB support, so images "
-        << "cannot be loaded!" << std::endl;
-  }
-  else
-  {
-    Log::Warn << "Load(): mlpack was not compiled with STB support, so images "
-        << "cannot be loaded!" << std::endl;
-  }
-
-  return false;
-}
-
-#endif
 
 } // namespace data
 } // namespace mlpack

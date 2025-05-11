@@ -70,18 +70,22 @@ find_python_module(pandas 0.15.0)
 if (NOT PY_PANDAS)
   set(PY_NOT_FOUND_MSG "${PY_NOT_FOUND_MSG}\n    - pandas")
 endif ()
+find_python_module(wheel)
+if (NOT PY_WHEEL)
+  set(PY_NOT_FOUND_MSG "${PY_NOT_FOUND_MSG}\n    - wheel")
+endif ()
 
 ## We need to check here if Python and other dependencies is even available, as
 ## it is require to build python-bindings.
 if (FORCE_BUILD_PYTHON_BINDINGS)
   if (NOT PYTHON_EXECUTABLE OR NOT PY_DISTUTILS OR NOT PY_CYTHON OR NOT PY_NUMPY
-      OR NOT PY_PANDAS)
+      OR NOT PY_PANDAS OR NOT PY_WHEEL)
     unset(BUILD_PYTHON_BINDINGS CACHE)
     message(FATAL_ERROR "\nCould not Build Python Bindings; the following modules are not available: ${PY_NOT_FOUND_MSG}")
   endif()
 else()
   if (NOT PYTHON_EXECUTABLE OR NOT PY_DISTUTILS OR NOT PY_CYTHON OR NOT PY_NUMPY
-      OR NOT PY_PANDAS)
+      OR NOT PY_PANDAS OR NOT PY_WHEEL)
     unset(BUILD_PYTHON_BINDINGS CACHE)
     not_found_return("Not building Python bindings; the following modules are not available: ${PY_NOT_FOUND_MSG}")
   endif()
@@ -109,7 +113,7 @@ set(CYTHON_SOURCES
 )
 
 set(TEST_SOURCES
-  tests/dataset_info_test.py
+  tests/test_dataset_info.py
   tests/test_python_binding.py
 )
 
@@ -153,6 +157,28 @@ add_custom_command(TARGET python_copy PRE_BUILD
     COMMAND ${CMAKE_COMMAND} ARGS -E copy
         ${CMAKE_CURRENT_SOURCE_DIR}/setup_readme.md
         ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/)
+
+# Copy all mlpack headers for inclusion in the package, but remove the bindings/
+# and tests/ directories as they should not be included.
+add_custom_command(TARGET python_copy PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E copy_directory
+        ${CMAKE_SOURCE_DIR}/src/
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/mlpack/include/)
+add_custom_command(TARGET python_copy PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} ARGS -E rm -r
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/mlpack/include/mlpack/bindings/
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/mlpack/include/mlpack/tests/)
+
+# Generate pkgconfig file for easy use of included headers.
+add_custom_target(python_pkgconfig
+    COMMAND ${CMAKE_COMMAND}
+        -D GENERATE_CPP_IN=${CMAKE_SOURCE_DIR}/src/mlpack/bindings/python/mlpack.pc.in
+        -D GENERATE_CPP_OUT=${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/mlpack/share/pkgconfig/mlpack.pc
+        -D PACKAGE_VERSION="${PACKAGE_VERSION}"
+        -P "${CMAKE_SOURCE_DIR}/CMake/ConfigureFileOnly.cmake"
+        BYPRODUCTS "${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/mlpack/share/pkgconfig/mlpack.pc"
+        COMMENT "Configuring Python mlpack.pc...")
+add_dependencies(python_copy python_pkgconfig)
 
 if (BUILD_TESTS)
   foreach(test_file ${TEST_SOURCES})
@@ -203,6 +229,9 @@ execute_process(COMMAND ${PYTHON_EXECUTABLE}
     "${PYTHON_INSTALL_PREFIX}"
     OUTPUT_VARIABLE CMAKE_PYTHON_PATH)
 string(STRIP "${CMAKE_PYTHON_PATH}" CMAKE_PYTHON_PATH)
+if (DEFINED ENV{PYTHONPATH})
+  string(APPEND CMAKE_PYTHON_PATH : $ENV{PYTHONPATH})
+endif ()
 install(CODE "set(ENV{PYTHONPATH} ${CMAKE_PYTHON_PATH})")
 install(CODE "set(PYTHON_EXECUTABLE \"${PYTHON_EXECUTABLE}\")")
 install(CODE "set(CMAKE_BINARY_DIR \"${CMAKE_BINARY_DIR}\")")
@@ -337,11 +366,8 @@ endmacro ()
 if (BUILD_PYTHON_BINDINGS)
   if (BUILD_TESTS)
     add_test(NAME python_bindings_test
-        COMMAND ${PYTHON_EXECUTABLE}
-            ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/setup.py test
+        COMMAND ${PYTHON_EXECUTABLE} -m pytest tests/
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/mlpack/bindings/python/)
-    set_tests_properties(python_bindings_test
-        PROPERTIES ENVIRONMENT "NO_BUILD=1;LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}:${CMAKE_BINARY_DIR}/lib/")
   endif ()
 endif ()
 

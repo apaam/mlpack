@@ -24,7 +24,6 @@ using namespace mlpack::bindings;
 using namespace mlpack::bindings::markdown;
 
 void PrintParamTable(const string& bindingName,
-                     const string& language,
                      Params& params,
                      const set<string>& headers,
                      unordered_set<string>& paramsSet,
@@ -33,6 +32,7 @@ void PrintParamTable(const string& bindingName,
                      const bool onlyInputParams,
                      const bool onlyOutputParams)
 {
+  const std::string& language = BindingInfo::Language();
   map<string, ParamData>& parameters = params.Parameters();
   for (map<string, ParamData>::iterator it = parameters.begin();
       it != parameters.end(); ++it)
@@ -65,7 +65,7 @@ void PrintParamTable(const string& bindingName,
 
       bool isHyperParam = false;
       size_t foundArma = it->second.cppType.find("arma");
-      if(it->second.input && foundArma == string::npos && !isSerial)
+      if (it->second.input && foundArma == string::npos && !isSerial)
         isHyperParam = true;
       printCondition &= isHyperParam;
     }

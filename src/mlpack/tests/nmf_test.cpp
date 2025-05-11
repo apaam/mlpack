@@ -153,11 +153,11 @@ TEST_CASE("SparseNMFAcolDistTest", "[NMFTest]")
     // Get an initialization.
     arma::mat iw, ih;
     RandomAcolInitialization<>::Initialize(v, r, iw, ih);
-    GivenInitialization g(std::move(iw), std::move(ih));
+    GivenInitialization<> g(std::move(iw), std::move(ih));
 
     // The GivenInitialization will force the same initialization for both
     // Apply() calls.
-    AMF<SimpleResidueTermination, GivenInitialization> nmf(srt, g);
+    AMF<SimpleResidueTermination, GivenInitialization<>> nmf(srt, g);
     nmf.Apply(v, r, w, h);
     nmf.Apply(dv, r, dw, dh);
 
@@ -183,8 +183,8 @@ TEST_CASE("SparseNMFALSTest", "[NMFTest]")
 {
   // We have to ensure that the residues aren't NaNs.  This can happen when a
   // matrix is created with all zeros in a column or row.
-  double denseResidue = std::numeric_limits<double>::quiet_NaN();
-  double sparseResidue = std::numeric_limits<double>::quiet_NaN();
+  double denseResidue;
+  double sparseResidue;
 
   mat vp, dvp; // Resulting matrices.
 
@@ -194,26 +194,29 @@ TEST_CASE("SparseNMFALSTest", "[NMFTest]")
   const size_t trials = 8;
   for (size_t trial = 0; trial < trials; ++trial)
   {
+    denseResidue = std::numeric_limits<double>::quiet_NaN();
+    sparseResidue = std::numeric_limits<double>::quiet_NaN();
+
     while (sparseResidue != sparseResidue && denseResidue != denseResidue)
     {
       mat w, h;
       sp_mat v;
-      v.sprandu(10, 10, 0.3);
+      v.sprandu(20, 20, 0.3);
       // Ensure there is at least one nonzero element in every row and column.
-      for (size_t i = 0; i < 10; ++i)
-        v(i, i) += 1e-5;
+      for (size_t i = 0; i < 20; ++i)
+        v(i, i) += 0.01;
       mat dv(v); // Make a dense copy.
       mat dw, dh;
-      size_t r = 5;
+      size_t r = 10;
 
       // Get an initialization.
       arma::mat iw, ih;
       RandomAcolInitialization<>::Initialize(v, r, iw, ih);
-      GivenInitialization g(std::move(iw), std::move(ih));
+      GivenInitialization<> g(std::move(iw), std::move(ih));
 
       SimpleResidueTermination srt(1e-10, 10000);
-      AMF<SimpleResidueTermination, GivenInitialization, NMFALSUpdate> nmf(srt,
-          g);
+      AMF<SimpleResidueTermination, GivenInitialization<>, NMFALSUpdate>
+          nmf(srt, g);
       nmf.Apply(v, r, w, h);
       nmf.Apply(dv, r, dw, dh);
 
@@ -227,7 +230,7 @@ TEST_CASE("SparseNMFALSTest", "[NMFTest]")
 
     // Make sure the results are about equal for the W and H matrices.
     const double relDiff = arma::norm(vp - dvp, "fro") / arma::norm(vp, "fro");
-    if (relDiff < 1e-5)
+    if (relDiff < 1e-4)
     {
       success = true;
       break;
@@ -252,8 +255,8 @@ TEST_CASE("NonNegNMFDefaultTest", "[NMFTest]")
   AMF<> nmf;
   nmf.Apply(v, r, w, h);
 
-  REQUIRE((arma::all(arma::vectorise(w) >= 0)
-      && arma::all(arma::vectorise(h) >= 0)));
+  REQUIRE((arma::all(vectorise(w) >= 0)
+      && arma::all(vectorise(h) >= 0)));
 }
 
 /**
@@ -274,8 +277,8 @@ TEST_CASE("NonNegNMFRandomDivTest", "[NMFTest]")
       NMFMultiplicativeDivergenceUpdate> nmf(srt);
   nmf.Apply(v, r, w, h);
 
-  REQUIRE((arma::all(arma::vectorise(w) >= 0)
-      && arma::all(arma::vectorise(h) >= 0)));
+  REQUIRE((arma::all(vectorise(w) >= 0)
+      && arma::all(vectorise(h) >= 0)));
 }
 
 /**
@@ -295,6 +298,35 @@ TEST_CASE("NonNegNMFALSTest", "[NMFTest]")
       NMFALSUpdate> nmf(srt);
   nmf.Apply(v, r, w, h);
 
-  REQUIRE((arma::all(arma::vectorise(w) >= 0)
-      && arma::all(arma::vectorise(h) >= 0)));
+  REQUIRE((arma::all(vectorise(w) >= 0)
+      && arma::all(vectorise(h) >= 0)));
+}
+
+/**
+ * Check that NoInitialization doesn't do anything to the elements of a matrix.
+ */
+TEMPLATE_TEST_CASE("NoInitializationTest", "[NMFTest]", float, double)
+{
+  using eT = TestType;
+
+  arma::Mat<eT> W, H;
+  W.randu(100, 5);
+  H.randu(5, 50);
+  arma::Mat<eT> oldW = W;
+  arma::Mat<eT> oldH = H;
+
+  arma::Mat<eT> V(100, 50, fill::zeros);
+
+  REQUIRE_NOTHROW(NoInitialization::Initialize(V, 5, W, H));
+  REQUIRE_NOTHROW(NoInitialization::InitializeOne(V, 5, W, true));
+  REQUIRE_NOTHROW(NoInitialization::InitializeOne(V, 5, H, false));
+
+  REQUIRE(arma::approx_equal(oldW, W, "both", 1e-5, 1e-5));
+  REQUIRE(arma::approx_equal(oldH, H, "both", 1e-5, 1e-5));
+
+  // And if something is the wrong size, it should throw an exception.
+  W.set_size(10, 10);
+
+  REQUIRE_THROWS(NoInitialization::Initialize(V, 5, W, H));
+  REQUIRE_THROWS(NoInitialization::InitializeOne(V, 5, W, true));
 }

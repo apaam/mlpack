@@ -4,7 +4,7 @@
  * @author Shashank Shekhar
  *
  * This file is an implementation of Continous Mountain Car task:
- * https://www.gymlibrary.ml/environments/classic_control/mountain_car_continuous
+ * https://www.gymlibrary.dev/environments/classic_control/mountain_car_continuous
  *
  * TODO: provide an option to use dynamics directly from OpenAI gym.
  *
@@ -18,7 +18,6 @@
 #define MLPACK_METHODS_RL_ENVIRONMENT_CONTINUOUS_MOUNTAIN_CAR_HPP
 
 #include <mlpack/prereqs.hpp>
-#include <mlpack/core/math/clamp.hpp>
 
 namespace mlpack {
 
@@ -38,7 +37,7 @@ class ContinuousMountainCar
     /**
      * Construct a state instance.
      */
-    State() : data(dimension, arma::fill::zeros)
+    State() : data(dimension)
     { /* Nothing to do here. */ }
 
     /**
@@ -136,16 +135,16 @@ class ContinuousMountainCar
     stepsPerformed++;
 
     // Calculate acceleration.
-    double force = ClampRange(action.action[0], -1.0, 1.0);
+    double force = std::min(std::max(action.action[0], -1.0), 1.0);
 
     // Update states.
     nextState.Velocity() = state.Velocity() + force * duration - 0.0025 *
         std::cos(3 * state.Position());
-    nextState.Velocity() = ClampRange(nextState.Velocity(),
-      velocityMin, velocityMax);
+    nextState.Velocity() = std::min(std::max(nextState.Velocity(),
+      velocityMin), velocityMax);
     nextState.Position() = state.Position() + nextState.Velocity();
-    nextState.Position() = ClampRange(nextState.Position(),
-      positionMin, positionMax);
+    nextState.Position() = std::min(std::max(nextState.Position(),
+      positionMin), positionMax);
     if (nextState.Position() == positionMin && nextState.Velocity() < 0)
       nextState.Velocity() = 0.0;
 

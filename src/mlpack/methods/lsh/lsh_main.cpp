@@ -70,7 +70,7 @@ BINDING_SEE_ALSO("@krann", "#krann");
 BINDING_SEE_ALSO("Locality-sensitive hashing on Wikipedia",
     "https://en.wikipedia.org/wiki/Locality-sensitive_hashing");
 BINDING_SEE_ALSO("Locality-sensitive hashing scheme based on p-stable"
-    "  distributions(pdf)", "http://mlpack.org/papers/lsh.pdf");
+    "  distributions(pdf)", "https://www.mlpack.org/papers/lsh.pdf");
 BINDING_SEE_ALSO("LSHSearch C++ class documentation",
     "@src/mlpack/methods/lsh/lsh.hpp");
 
@@ -182,6 +182,12 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
   LSHSearch<>* allkann;
   if (params.Has("reference"))
   {
+    // Workaround: this avoids printing load information twice for the CLI
+    // bindings, where GetPrintable() will trigger a call to data::Load(),
+    // which prints loading information in the middle of the Log::Info
+    // message.
+    (void) params.Get<arma::mat>("reference");
+
     allkann = new LSHSearch<>();
     Log::Info << "Using reference data from "
         << params.GetPrintable<arma::mat>("reference") << "." << endl;
@@ -203,6 +209,9 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
         << endl;
     if (params.Has("query"))
     {
+      // Workaround: avoid printing load information twice for CLI bindings.
+      (void) params.Get<arma::mat>("query");
+
       Log::Info << "Loaded query data from "
           << params.GetPrintable<arma::mat>("query") << "." << endl;
       queryData = std::move(params.Get<arma::mat>("query"));

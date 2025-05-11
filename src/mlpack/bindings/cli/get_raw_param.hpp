@@ -27,13 +27,13 @@ namespace cli {
 template<typename T>
 T& GetRawParam(
     util::ParamData& d,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<!data::HasSerialize<T>::value>::type* = 0,
-    const typename std::enable_if<!std::is_same<T,
-        std::tuple<mlpack::data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<!data::HasSerialize<T>::value>* = 0,
+    const std::enable_if_t<!std::is_same_v<T,
+        std::tuple<mlpack::data::DatasetInfo, arma::mat>>>* = 0)
 {
   // No mapping is needed, so just cast it directly.
-  return *MLPACK_ANY_CAST<T>(&d.value);
+  return *std::any_cast<T>(&d.value);
 }
 
 /**
@@ -42,14 +42,14 @@ T& GetRawParam(
 template<typename T>
 T& GetRawParam(
     util::ParamData& d,
-    const typename std::enable_if<
+    const std::enable_if_t<
         arma::is_arma_type<T>::value ||
-        std::is_same<T, std::tuple<mlpack::data::DatasetInfo,
-                                   arma::mat>>::value>::type* = 0)
+        std::is_same_v<T, std::tuple<mlpack::data::DatasetInfo,
+                                     arma::mat>>>* = 0)
 {
   // Don't load the matrix.
-  typedef std::tuple<T, std::tuple<std::string, size_t, size_t>> TupleType;
-  T& value = std::get<0>(*MLPACK_ANY_CAST<TupleType>(&d.value));
+  using TupleType = std::tuple<T, std::tuple<std::string, size_t, size_t>>;
+  T& value = std::get<0>(*std::any_cast<TupleType>(&d.value));
   return value;
 }
 
@@ -59,12 +59,12 @@ T& GetRawParam(
 template<typename T>
 T*& GetRawParam(
     util::ParamData& d,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<data::HasSerialize<T>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<data::HasSerialize<T>::value>* = 0)
 {
   // Don't load the model.
-  typedef std::tuple<T*, std::string> TupleType;
-  T*& value = std::get<0>(*MLPACK_ANY_CAST<TupleType>(&d.value));
+  using TupleType = std::tuple<T*, std::string>;
+  T*& value = std::get<0>(*std::any_cast<TupleType>(&d.value));
   return value;
 }
 
@@ -82,7 +82,7 @@ void GetRawParam(util::ParamData& d,
                  void* output)
 {
   // Cast to the correct type.
-  *((T**) output) = &GetRawParam<typename std::remove_pointer<T>::type>(
+  *((T**) output) = &GetRawParam<std::remove_pointer_t<T>>(
       const_cast<util::ParamData&>(d));
 }
 

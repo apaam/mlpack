@@ -87,17 +87,16 @@ void DrusillaSelect<MatType>::Train(
   for (size_t i = 0; i < refCopy.n_cols; ++i)
   {
     refCopy.col(i) = referenceSet.col(i) - dataMean;
-    norms[i] = arma::norm(refCopy.col(i));
+    norms[i] = norm(refCopy.col(i));
   }
 
   // Find the top m points for each of the l projections...
   for (size_t i = 0; i < l; ++i)
   {
     // Pick best index.
-    arma::uword maxIndex = 0;
-    norms.max(maxIndex);
+    arma::uword maxIndex = norms.index_max();
 
-    arma::vec line(refCopy.col(maxIndex) / arma::norm(refCopy.col(maxIndex)));
+    arma::vec line(refCopy.col(maxIndex) / norm(refCopy.col(maxIndex)));
 
     // Calculate distortion and offset and make scores.
     std::vector<bool> closeAngle(referenceSet.n_cols, false);
@@ -106,8 +105,8 @@ void DrusillaSelect<MatType>::Train(
     {
       if (norms[j] > 0.0)
       {
-        const double offset = arma::dot(refCopy.col(j), line);
-        const double distortion = arma::norm(refCopy.col(j) - offset * line);
+        const double offset = dot(refCopy.col(j), line);
+        const double distortion = norm(refCopy.col(j) - offset * line);
         sums[j] = std::abs(offset) - std::abs(distortion);
         closeAngle[j] =
             (std::atan(distortion / std::abs(offset)) < (M_PI / 8.0));
@@ -119,7 +118,7 @@ void DrusillaSelect<MatType>::Train(
     }
 
     // Find the top m elements using a priority queue.
-    typedef std::pair<double, size_t> Candidate;
+    using Candidate = std::pair<double, size_t>;
     struct CandidateCmp
     {
       bool operator()(const Candidate& c1, const Candidate& c2)

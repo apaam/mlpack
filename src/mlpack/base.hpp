@@ -12,18 +12,12 @@
 #ifndef MLPACK_BASE_HPP
 #define MLPACK_BASE_HPP
 
-// First, check if Armadillo was included before, warning if so.
-#ifdef ARMA_INCLUDES
-#pragma message "Armadillo was included before mlpack; this can sometimes cause\
- problems.  It should only be necessary to include <mlpack/core.hpp> and not \
-<armadillo>."
-#endif
-
 // Defining _USE_MATH_DEFINES should set M_PI.
 #define _USE_MATH_DEFINES
 #include <cmath>
 
 // Next, standard includes.
+#include <any>
 #include <cctype>
 #include <cfloat>
 #include <climits>
@@ -31,28 +25,33 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <optional>
 #include <stdexcept>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <numeric>
 #include <vector>
 #include <queue>
+#include <string>
 
 // But if it's not defined, we'll do it.
 #ifndef M_PI
   #define M_PI 3.141592653589793238462643383279
 #endif
 
-// MLPACK_COUT_STREAM is used to change the default stream for printing
-// purpose.
-#if !defined(MLPACK_COUT_STREAM)
- #define MLPACK_COUT_STREAM std::cout
-#endif
-
-// MLPACK_CERR_STREAM is used to change the stream for printing warnings
-// and errors.
-#if !defined(MLPACK_CERR_STREAM)
- #define MLPACK_CERR_STREAM std::cerr
+// Include mlpack configuration.
+#ifdef MLPACK_CUSTOM_CONFIG_FILE
+  // During the build process, CMake will generate a custom configuration file
+  // specific to the system.  When CMake is used to build mlpack, that custom
+  // file is used via the MLPACK_CUSTOM_CONFIG_FILE macro.  When mlpack is
+  // installed by CMake, the custom configuration file is installed as
+  // config.hpp, and MLPACK_CUSTOM_CONFIG_FILE is not set after installation.
+  #undef MLPACK_WRAP_INCLUDE
+  #define MLPACK_WRAP_INCLUDE(x) <x>
+  #include MLPACK_WRAP_INCLUDE(MLPACK_CUSTOM_CONFIG_FILE)
+#else
+  #include "config.hpp"
 #endif
 
 // Give ourselves a nice way to force functions to be inline if we need.
@@ -66,28 +65,27 @@
   #define mlpack_force_inline __forceinline
 #endif
 
-// Backport std::any from C+17 to C++11 to replace boost::any.
-// Use mnmlstc backport implementation only if compiler does not
-// support C++17.
-#if __cplusplus < 201703L && !defined(_MSC_VER)
-  #include <mlpack/core/std_backport/any.hpp>
-  #include <mlpack/core/std_backport/string_view.hpp>
-  #define MLPACK_ANY core::v2::any
-  #define MLPACK_ANY_CAST core::v2::any_cast
-  #define MLPACK_STRING_VIEW core::v2::string_view
-#elif __cplusplus < 201703L && defined(_MSC_VER)
-  #error "When using Visual Studio, mlpack should be compiled with /Zc:__cplusplus and /std:c++17 or newer."
-#else
-  #include <any>
-  #include <string_view>
-  #define MLPACK_ANY std::any
-  #define MLPACK_ANY_CAST std::any_cast
-  #define MLPACK_STRING_VIEW std::string_view
+// detect C++17 mode
+#if (__cplusplus >= 201703L)
+  #undef  MLPACK_HAVE_CXX17
+  #define MLPACK_HAVE_CXX17
 #endif
 
-// Now include Armadillo through the special mlpack extensions.
-#include <mlpack/core/arma_extend/arma_extend.hpp>
+#if defined(_MSVC_LANG)
+  #if (_MSVC_LANG >= 201703L)
+    #undef  MLPACK_HAVE_CXX17
+    #define MLPACK_HAVE_CXX17
+  #endif
+#endif
+
+#if !defined(MLPACK_HAVE_CXX17)
+  #error "Need to enable C++17 mode in your compiler"
+#endif
+
+// Now include Armadillo and traits that we use for it.
+#include <armadillo>
 #include <mlpack/core/util/arma_traits.hpp>
+#include <mlpack/core/util/omp_reductions.hpp>
 
 // On Visual Studio, disable C4519 (default arguments for function templates)
 // since it's by default an error, which doesn't even make any sense because
@@ -96,14 +94,16 @@
   #pragma warning(disable : 4519)
 #endif
 
-// This can be removed when Visual Studio supports an OpenMP version with
-// unsigned loop variables.
+// OpenMP usage must be version 3.1 or newer, if it is being used.
 #if (defined(_OPENMP) && (_OPENMP >= 201107))
-  #undef  MLPACK_USE_OPENMP
+  #undef MLPACK_USE_OPENMP
   #define MLPACK_USE_OPENMP
+#elif defined(_OPENMP)
+  #ifdef _MSC_VER
+    #error "mlpack requires OpenMP 3.1+; compile without /OPENMP"
+  #else
+    #error "mlpack requires OpenMP 3.1+; disable OpenMP in your compiler"
+  #endif
 #endif
-
-// We need to be able to mark functions deprecated.
-#include <mlpack/core/util/deprecated.hpp>
 
 #endif

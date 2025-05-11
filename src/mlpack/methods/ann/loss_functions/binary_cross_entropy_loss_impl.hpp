@@ -29,10 +29,10 @@ typename MatType::elem_type BCELossType<MatType>::Forward(
     const MatType& prediction,
     const MatType& target)
 {
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
 
-  ElemType lossSum = -arma::accu(target % arma::log(prediction + eps) +
-      (1. - target) % arma::log(1. - prediction + eps));
+  ElemType lossSum = -accu(target % log(prediction + eps) +
+      (1. - target) % log(1. - prediction + eps));
 
   if (reduction)
     return lossSum;

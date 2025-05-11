@@ -57,6 +57,7 @@ add_executable(mlpack_test
   decision_tree_test.cpp
   det_test.cpp
   digamma_test.cpp
+  distance_test.cpp
   distribution_test.cpp
   drusilla_select_test.cpp
   emst_test.cpp
@@ -67,9 +68,10 @@ add_executable(mlpack_test
   hpt_test.cpp
   hoeffding_tree_test.cpp
   hyperplane_test.cpp
-  image_load_test.cpp
+  image_test.cpp
   imputation_test.cpp
   io_test.cpp
+  kde_model_test.cpp
   kde_test.cpp
   kernel_pca_test.cpp
   kernel_test.cpp
@@ -79,7 +81,6 @@ add_executable(mlpack_test
   knn_test.cpp
   krann_search_test.cpp
   lars_test.cpp
-  lin_alg_test.cpp
   linear_regression_test.cpp
   lmnn_test.cpp
   linear_svm_test.cpp
@@ -103,6 +104,7 @@ add_executable(mlpack_test
   one_hot_encoding_test.cpp
   pca_test.cpp
   perceptron_test.cpp
+  policy_gradient_test.cpp
   prefixedoutstream_test.cpp
   python_binding_test.cpp
   qdafn_test.cpp
@@ -135,6 +137,7 @@ add_executable(mlpack_test
   termination_policy_test.cpp
   test_catch_tools.hpp
   test_function_tools.hpp
+  test_reinforcement_learning_agent.hpp
   timer_test.cpp
   tree_test.cpp
   tree_traits_test.cpp
@@ -221,14 +224,44 @@ else()
   target_compile_definitions(mlpack_test PUBLIC -DMLPACK_SUPPRESS_FATAL)
 endif()
 
-set_target_properties(mlpack_test PROPERTIES COTIRE_CXX_PREFIX_HEADER_INIT "../core.hpp")
-cotire(mlpack_test)
+# This has to be added here so that cotire picks it up (even though it is in
+# individual tests).
+if (CMAKE_VERSION VERSION_GREATER "3.16.0" AND USE_PRECOMPILED_HEADERS)
+  if (MSVC)
+    # NOTE: this is a workaround for a Github runner issue caused by a bad
+    # update.  See https://github.com/actions/runner-images/issues/10004 for
+    # more details.  It's likely that this workaround doesn't need to be here
+    # for long.
+    target_compile_definitions(mlpack_test PUBLIC
+        -D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR)
+
+    # MSVC RAM usage is decreased significantly if mlpack.hpp is included as a
+    # precompiled header.  (It is still pretty slow, but this is necessary to
+    # avoid a C1060 on Azure Pipelines.)
+    target_compile_definitions(mlpack_test PUBLIC
+        -DMLPACK_ENABLE_ANN_SERIALIZATION)
+    target_precompile_headers(mlpack_test PUBLIC
+        "../core.hpp"
+        "../../mlpack.hpp"
+        <ensmallen.hpp>
+        <armadillo>)
+  else ()
+    target_precompile_headers(mlpack_test PUBLIC
+        "../prereqs.hpp"
+        "catch.hpp"
+        "test_catch_tools.hpp"
+        "serialization.hpp")
+    set_source_files_properties(main.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+  endif ()
+endif ()
 
 # Copy test data into right place.
 add_custom_command(TARGET mlpack_test
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data/
       ${PROJECT_BINARY_DIR}
+  COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/doc/img/cat.jpg
+      ${PROJECT_BINARY_DIR}/
 )
 
 add_custom_command(TARGET mlpack_test
@@ -238,6 +271,7 @@ add_custom_command(TARGET mlpack_test
   COMMAND ${CMAKE_COMMAND} -E tar xjf digits_test.tar.bz2
   COMMAND ${CMAKE_COMMAND} -E tar xjf digits_train_label.tar.bz2
   COMMAND ${CMAKE_COMMAND} -E tar xjf digits_test_label.tar.bz2
+  COMMAND ${CMAKE_COMMAND} -E tar xjf sheep.tar.bz2
   WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 )
 

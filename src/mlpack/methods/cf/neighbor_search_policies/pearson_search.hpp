@@ -57,7 +57,7 @@ class PearsonSearch
     // For each vector x, first subtract mean(x) from each element in x.
     // Then normalize the vector to unit length.
     arma::mat normalizedSet(arma::size(referenceSet));
-    normalizedSet = arma::normalise(
+    normalizedSet = normalise(
         referenceSet.each_row() - arma::mean(referenceSet));
 
     neighborSearch.Train(std::move(normalizedSet));
@@ -79,7 +79,7 @@ class PearsonSearch
     // For each vector x, first subtract mean(x) from each element in x.
     // Then normalize the vector to unit length.
     arma::mat normalizedQuery;
-    normalizedQuery = arma::normalise(query.each_row() - arma::mean(query));
+    normalizedQuery = normalise(query.each_row() - arma::mean(query));
 
     neighborSearch.Search(normalizedQuery, k, neighbors, similarities);
 
@@ -89,7 +89,7 @@ class PearsonSearch
     // Furthermore, we restrict the range of similarity to be [0, 1]:
     // similarities = (pearson(a,b) + 1) / 2.0. As a result we have the
     // following formula.
-    similarities = 1 - arma::pow(similarities, 2) / 4.0;
+    similarities = 1 - pow(similarities, 2) / 4.0;
   }
 
  private:

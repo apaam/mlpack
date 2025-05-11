@@ -64,7 +64,7 @@ class MeanPoolingRule
   template<typename MatType>
   void Unpooling(const MatType& input, const double value, MatType& output)
   {
-    output = arma::zeros<MatType>(input.n_rows, input.n_cols);
+    output = zeros<MatType>(input.n_rows, input.n_cols);
     const double mean = arma::mean(arma::mean(input));
 
     output.elem(arma::find(mean == input, 1)).fill(value);
@@ -407,7 +407,7 @@ class GlimpseType : public Layer<InputType, OutputType>
 }; // class GlimpseType
 
 // Standard Glimpse layer.
-typedef GlimpseType<arma::mat, arma::mat> Glimpse;
+using Glimpse = GlimpseType<arma::mat, arma::mat>;
 
 } // namespace mlpack
 

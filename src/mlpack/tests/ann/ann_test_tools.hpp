@@ -74,7 +74,7 @@ double JacobianTest(ModuleType& module,
     derivTemp(i) = 1;
 
     arma::mat delta(input.n_rows, input.n_cols);
-    module.Backward(input, deriv, delta);
+    module.Backward(input, output, deriv, delta);
 
     jacobianB.col(i) = delta;
   }
@@ -125,7 +125,7 @@ double CustomJacobianTest(ModuleType& module,
     deriv(i) = 1;
 
     arma::mat delta(input.n_rows, input.n_cols);
-    module.Backward(input, deriv, delta);
+    module.Backward(input, output, deriv, delta);
 
     jacobianB.col(i) = delta;
   }
@@ -167,15 +167,64 @@ double JacobianPerformanceTest(ModuleType& module,
   return arma::max(arma::max(arma::abs(centralDifference - delta)));
 }
 
+template<typename ActivationFunction>
+double ActivationJacobianTest(arma::mat& input,
+                              const double minValue = -2,
+                              const double maxValue = -1,
+                              const double pertubation = 1e-6)
+{
+  arma::mat output, outputA, outputB, jacobianA, jacobianB;
+  output.set_size(input.n_rows, input.n_cols);
+  outputA.set_size(input.n_rows, input.n_cols);
+  outputB.set_size(input.n_rows, input.n_cols);
+
+  RandomInitialization init(minValue, maxValue);
+  init.Initialize(input, input.n_rows, input.n_cols);
+
+  ActivationFunction::Fn(input, output);
+  jacobianA = arma::zeros(input.n_elem, output.n_elem);
+
+  for (size_t i = 0; i < input.n_elem; ++i)
+  {
+    double original = input(i);
+    input(i) = original - pertubation;
+    ActivationFunction::Fn(input, outputA);
+    input(i) = original + pertubation;
+    ActivationFunction::Fn(input, outputB);
+    input(i) = original;
+
+    outputB -= outputA;
+    outputB /= 2 * pertubation;
+    jacobianA.row(i) = outputB.t();
+  }
+
+  arma::mat deriv = arma::zeros(output.n_rows, output.n_cols);
+  jacobianB = arma::zeros(input.n_elem, output.n_elem);
+
+  for (size_t i = 0; i < deriv.n_elem; ++i)
+  {
+    deriv.zeros();
+    deriv(i) = 1;
+
+    arma::mat delta(input.n_rows, input.n_cols);
+    ActivationFunction::Deriv(input, output, delta);
+    delta %= deriv;
+
+    jacobianB.col(i) = delta;
+  }
+
+  return arma::max(arma::max(arma::abs(jacobianA - jacobianB)));
+}
+
 // Simple numerical gradient checker.
-template<class FunctionType>
+template<class FunctionType, typename MatType = arma::mat>
 double CheckGradient(FunctionType& function, const double eps = 1e-7)
 {
   // Get gradients for the current parameters.
-  arma::mat orgGradient, gradient, estGradient;
+  MatType orgGradient, gradient, estGradient;
   function.Gradient(orgGradient);
 
-  estGradient = arma::zeros(orgGradient.n_rows, orgGradient.n_cols);
+  estGradient = arma::zeros<MatType>(orgGradient.n_rows, orgGradient.n_cols);
 
   // Compute numeric approximations to gradient.
   for (size_t i = 0; i < orgGradient.n_elem; ++i)
@@ -231,7 +280,7 @@ double CheckRegularizerGradient(FunctionType& function, const double eps = 1e-7)
     }
   }
 
-  estGradient = arma::vectorise(estGradient);
+  estGradient = vectorise(estGradient);
   // Estimate error of gradient.
   return arma::norm(orgGradient - estGradient) /
       arma::norm(orgGradient + estGradient);

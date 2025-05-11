@@ -111,8 +111,7 @@ class PoissonNLLLossType
 
  private:
   //! Check if the probabilities lie in the range [0, 1].
-  template<typename eT>
-  void CheckProbs(const arma::Mat<eT>& probs)
+  void CheckProbs(const MatType& probs)
   {
     for (size_t i = 0; i < probs.size(); ++i)
     {
@@ -137,7 +136,7 @@ class PoissonNLLLossType
 }; // class PoissonNLLLossType
 
 // Default typedef for typical `arma::mat` usage.
-typedef PoissonNLLLossType<arma::mat> PoissonNLLLoss;
+using PoissonNLLLoss = PoissonNLLLossType<arma::mat>;
 
 } // namespace mlpack
 

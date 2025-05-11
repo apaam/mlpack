@@ -83,7 +83,7 @@ TEST_CASE("GaussiansTest", "[DBSCANTest]")
 {
   arma::mat points(3, 300);
 
-  GaussianDistribution g1(3), g2(3), g3(3);
+  GaussianDistribution<> g1(3), g2(3), g3(3);
   g1.Mean() = arma::vec("0.0 0.0 0.0");
   g2.Mean() = arma::vec("6.0 6.0 8.0");
   g3.Mean() = arma::vec("-6.0 1.0 -7.0");
@@ -202,13 +202,42 @@ TEST_CASE("OutlierSingleModeTest", "[DBSCANTest]")
 }
 
 /**
+ * Check that outliers are properly labeled as noise
+ * in the case of float32.
+ */
+TEST_CASE("Float32OutlierSingleModeTest", "[DBSCANTest]")
+{
+  arma::Mat<float> points(2, 200, arma::fill::randu);
+
+  // Add 3 outliers.
+  points.col(15) = arma::Col<float>("10.3 1.6");
+  points.col(45) = arma::Col<float>("-100 0.0");
+  points.col(101) = arma::Col<float>("1.5 1.5");
+
+  DBSCAN<RangeSearch<
+         EuclideanDistance,
+         arma::Mat<float>,
+         KDTree>,
+         OrderedPointSelection> d(0.1, 3, false);
+
+  arma::Row<size_t> assignments;
+  const size_t clusters = d.Cluster(points, assignments);
+
+  REQUIRE(clusters > 0);
+  REQUIRE(assignments.n_elem == points.n_cols);
+  REQUIRE(assignments[15] == SIZE_MAX);
+  REQUIRE(assignments[45] == SIZE_MAX);
+  REQUIRE(assignments[101] == SIZE_MAX);
+}
+
+/**
  * Check that the Gaussian clusters are correctly found.
  */
 TEST_CASE("GaussiansSingleModeTest", "[DBSCANTest]")
 {
   arma::mat points(3, 300);
 
-  GaussianDistribution g1(3), g2(3), g3(3);
+  GaussianDistribution<> g1(3), g2(3), g3(3);
   g1.Mean() = arma::vec("0.0 0.0 0.0");
   g2.Mean() = arma::vec("6.0 6.0 8.0");
   g3.Mean() = arma::vec("-6.0 1.0 -7.0");

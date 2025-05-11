@@ -19,7 +19,7 @@
 namespace mlpack {
 
 template<typename MatType>
-AddType<MatType>::AddType() : 
+AddType<MatType>::AddType() :
     Layer<MatType>(),
     outSize(0)
 {
@@ -71,12 +71,13 @@ AddType<MatType>::operator=(AddType&& other)
 template<typename MatType>
 void AddType<MatType>::Forward(const MatType& input, MatType& output)
 {
-  output = input + arma::repmat(arma::vectorise(weights), 1, input.n_cols);
+  output = input + repmat(vectorise(weights), 1, input.n_cols);
 }
 
 template<typename MatType>
 void AddType<MatType>::Backward(
     const MatType& /* input */,
+    const MatType& /* output */,
     const MatType& gy,
     MatType& g)
 {
@@ -89,14 +90,15 @@ void AddType<MatType>::Gradient(
     const MatType& error,
     MatType& gradient)
 {
-  gradient = error;
+  // The gradient is the sum of the error across all input points.
+  gradient = sum(error, 1);
 }
 
 template<typename MatType>
-void AddType<MatType>::SetWeights(typename MatType::elem_type* weightPtr)
+void AddType<MatType>::SetWeights(const MatType& weightsIn)
 {
   // Set the weights to wrap the given memory.
-  MakeAlias(weights, weightPtr, 1, outSize);
+  MakeAlias(weights, weightsIn, 1, outSize);
 }
 
 template<typename MatType>

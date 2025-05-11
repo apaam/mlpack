@@ -92,7 +92,7 @@ BINDING_SEE_ALSO("@random_forest", "#random_forest");
 BINDING_SEE_ALSO("Mining High-Speed Data Streams (pdf)",
     "http://dm.cs.washington.edu/papers/vfdt-kdd00.pdf");
 BINDING_SEE_ALSO("HoeffdingTree class documentation",
-    "@src/mlpack/methods/hoeffding_trees/hoeffding_tree.hpp");
+    "@doc/user/methods/hoeffding_tree.md");
 
 PARAM_MATRIX_AND_INFO_IN("training", "Training dataset (may be categorical).",
     "t");
@@ -133,7 +133,7 @@ PARAM_INT_IN("observations_before_binning", "If the 'domingos' split strategy "
     "performed.", "o", 100);
 
 // Convenience typedef.
-typedef tuple<DatasetInfo, arma::mat> TupleType;
+using TupleType = tuple<DatasetInfo, arma::mat>;
 
 void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
 {
@@ -214,7 +214,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
       // Extract the labels from the last dimension of training set.
       Log::Info << "Using the last dimension of training set as labels."
           << endl;
-      labels = arma::conv_to<arma::Row<size_t>>::from(
+      labels = ConvTo<arma::Row<size_t>>::From(
           trainingSet.row(trainingSet.n_rows - 1));
       trainingSet.shed_row(trainingSet.n_rows - 1);
     }
@@ -230,7 +230,7 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
     {
       // Build the model.
       model->BuildModel(trainingSet, datasetInfo, labels,
-          arma::max(labels) + 1, batchTraining, confidence, maxSamples,
+          max(labels) + 1, batchTraining, confidence, maxSamples,
           100, minSamples, bins, observationsBeforeBinning);
       --passes; // This model-building takes one pass.
     }

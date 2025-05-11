@@ -47,15 +47,15 @@ class FFTConvolution
    * @param filter Filter used to perform the convolution.
    * @param output Output data that contains the results of the convolution.
    */
-  template<typename eT, typename Border = BorderMode>
-  static typename std::enable_if<
-      std::is_same<Border, ValidConvolution>::value, void>::type
-  Convolution(const arma::Mat<eT>& input,
-              const arma::Mat<eT>& filter,
-              arma::Mat<eT>& output)
+  template<typename MatType, typename Border = BorderMode>
+  static std::enable_if_t<std::is_same_v<Border, ValidConvolution>, void>
+  Convolution(const MatType& input,
+              const MatType& filter,
+              MatType& output,
+              const typename std::enable_if_t<IsMatrix<MatType>::value>* = 0)
   {
-    arma::Mat<eT> inputPadded = input;
-    arma::Mat<eT> filterPadded = filter;
+    MatType inputPadded = input;
+    MatType filterPadded = filter;
 
     if (padLastDim)
       inputPadded.resize(inputPadded.n_rows, inputPadded.n_cols + 1);
@@ -63,8 +63,7 @@ class FFTConvolution
     // Pad filter and input to the output shape.
     filterPadded.resize(inputPadded.n_rows, inputPadded.n_cols);
 
-    arma::Mat<eT> temp = arma::real(ifft2(arma::fft2(inputPadded) % arma::fft2(
-        filterPadded)));
+    MatType temp = real(ifft2(fft2(inputPadded) % fft2(filterPadded)));
 
     // Extract the region of interest. We don't need to handle the padLastDim in
     // a special way we just cut it out from the output matrix.
@@ -82,12 +81,12 @@ class FFTConvolution
    * @param filter Filter used to perform the convolution.
    * @param output Output data that contains the results of the convolution.
    */
-  template<typename eT, typename Border = BorderMode>
-  static typename std::enable_if<
-      std::is_same<Border, FullConvolution>::value, void>::type
-  Convolution(const arma::Mat<eT>& input,
-              const arma::Mat<eT>& filter,
-              arma::Mat<eT>& output)
+  template<typename MatType, typename Border = BorderMode>
+  static std::enable_if_t<std::is_same_v<Border, FullConvolution>, void>
+  Convolution(const MatType& input,
+              const MatType& filter,
+              MatType& output,
+              const typename std::enable_if_t<IsMatrix<MatType>::value>* = 0)
   {
     // In case of the full convolution outputRows and outputCols doesn't
     // represent the true output size when the padLastDim parameter is set,
@@ -99,18 +98,16 @@ class FFTConvolution
         outputCols++;
 
     // Pad filter and input to the working output shape.
-    arma::Mat<eT> inputPadded = arma::zeros<arma::Mat<eT> >(outputRows,
-        outputCols);
+    MatType inputPadded = zeros<MatType>(outputRows, outputCols);
     inputPadded.submat(filter.n_rows - 1, filter.n_cols - 1,
           filter.n_rows - 1 + input.n_rows - 1,
           filter.n_cols - 1 + input.n_cols - 1) = input;
 
-    arma::Mat<eT> filterPadded = filter;
+    MatType filterPadded = filter;
     filterPadded.resize(outputRows, outputCols);
 
     // Perform FFT and IFFT
-    arma::Mat<eT> temp = arma::real(ifft2(arma::fft2(inputPadded) % arma::fft2(
-        filterPadded)));
+    MatType temp = real(ifft2(fft2(inputPadded) % fft2(filterPadded)));
 
     // Extract the region of interest. We don't need to handle the padLastDim
     // parameter in a special way we just cut it out from the output matrix.
@@ -130,17 +127,19 @@ class FFTConvolution
    * @param filter Filter used to perform the convolution.
    * @param output Output data that contains the results of the convolution.
    */
-  template<typename eT>
-  static void Convolution(const arma::Cube<eT>& input,
-                          const arma::Cube<eT>& filter,
-                          arma::Cube<eT>& output)
+  template<typename CubeType>
+  static void Convolution(
+      const CubeType& input,
+      const CubeType& filter,
+      CubeType& output,
+      const typename std::enable_if_t<IsCube<CubeType>::value>* = 0)
   {
-    arma::Mat<eT> convOutput;
+    using MatType = typename GetDenseMatType<CubeType>::type;
+    MatType convOutput;
     FFTConvolution<BorderMode>::Convolution(input.slice(0), filter.slice(0),
         convOutput);
 
-    output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
-        input.n_slices);
+    output = CubeType(convOutput.n_rows, convOutput.n_cols, input.n_slices);
     output.slice(0) = convOutput;
 
     for (size_t i = 1; i < input.n_slices; ++i)
@@ -161,17 +160,16 @@ class FFTConvolution
    * @param filter Filter used to perform the convolution.
    * @param output Output data that contains the results of the convolution.
    */
-  template<typename eT>
-  static void Convolution(const arma::Mat<eT>& input,
-                          const arma::Cube<eT>& filter,
-                          arma::Cube<eT>& output)
+  template<typename MatType, typename CubeType>
+  static void Convolution(const MatType& input,
+                          const CubeType& filter,
+                          CubeType& output)
   {
-    arma::Mat<eT> convOutput;
+    MatType convOutput;
     FFTConvolution<BorderMode>::Convolution(input, filter.slice(0),
         convOutput);
 
-    output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
-        filter.n_slices);
+    output = CubeType(convOutput.n_rows, convOutput.n_cols, filter.n_slices);
     output.slice(0) = convOutput;
 
     for (size_t i = 1; i < filter.n_slices; ++i)
@@ -189,16 +187,16 @@ class FFTConvolution
    * @param filter Filter used to perform the convolution.
    * @param output Output data that contains the results of the convolution.
    */
-  template<typename eT>
-  static void Convolution(const arma::Cube<eT>& input,
-                          const arma::Mat<eT>& filter,
-                          arma::Cube<eT>& output)
+  template<typename MatType, typename CubeType>
+  static void Convolution(const CubeType& input,
+                          const MatType& filter,
+                          CubeType& output)
   {
-    arma::Mat<eT> convOutput;
+    MatType convOutput;
     FFTConvolution<BorderMode>::Convolution(input.slice(0), filter,
         convOutput);
 
-    output = arma::Cube<eT>(convOutput.n_rows, convOutput.n_cols,
+    output = CubeType(convOutput.n_rows, convOutput.n_cols,
         input.n_slices);
     output.slice(0) = convOutput;
 

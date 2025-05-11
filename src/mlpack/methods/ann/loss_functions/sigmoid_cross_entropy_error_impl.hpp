@@ -33,7 +33,7 @@ SigmoidCrossEntropyErrorType<MatType>::Forward(
     const MatType& prediction,
     const MatType& target)
 {
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
   ElemType maximum = 0;
   for (size_t i = 0; i < prediction.n_elem; ++i)
   {
@@ -41,7 +41,7 @@ SigmoidCrossEntropyErrorType<MatType>::Forward(
         std::log(1 + std::exp(-std::abs(prediction[i])));
   }
 
-  ElemType lossSum = maximum - arma::accu(prediction % target);
+  ElemType lossSum = maximum - accu(prediction % target);
 
   if (reduction)
     return lossSum;
@@ -55,7 +55,7 @@ inline void SigmoidCrossEntropyErrorType<MatType>::Backward(
     const MatType& target,
     MatType& loss)
 {
-  loss = 1.0 / (1.0 + arma::exp(-prediction)) - target;
+  loss = 1.0 / (1.0 + exp(-prediction)) - target;
 
   if (!reduction)
     loss = loss / target.n_elem;

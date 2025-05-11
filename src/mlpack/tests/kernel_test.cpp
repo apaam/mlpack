@@ -19,222 +19,40 @@
 using namespace mlpack;
 
 /**
- * Basic test of the Manhattan distance.
- */
-TEST_CASE("ManhattanDistanceTest", "[KernelTest]")
-{
-  // A couple quick tests.
-  arma::vec a = "1.0 3.0 4.0";
-  arma::vec b = "3.0 3.0 5.0";
-
-  REQUIRE(ManhattanDistance::Evaluate(a, b) == Approx(3.0).epsilon(1e-7));
-  REQUIRE(ManhattanDistance::Evaluate(b, a) == Approx(3.0).epsilon(1e-7));
-
-  // Check also for when the root is taken (should be the same).
-  REQUIRE((LMetric<1, true>::Evaluate(a, b)) == Approx(3.0).epsilon(1e-7));
-  REQUIRE((LMetric<1, true>::Evaluate(b, a)) == Approx(3.0).epsilon(1e-7));
-}
-
-/**
- * Basic test of squared Euclidean distance.
- */
-TEST_CASE("SquaredEuclideanDistanceTest", "[KernelTest]")
-{
-  // Sample 2-dimensional vectors.
-  arma::vec a = "1.0  2.0";
-  arma::vec b = "0.0 -2.0";
-
-  REQUIRE(SquaredEuclideanDistance::Evaluate(a, b) ==
-      Approx(17.0).epsilon(1e-7));
-  REQUIRE(SquaredEuclideanDistance::Evaluate(b, a) ==
-      Approx(17.0).epsilon(1e-7));
-}
-
-/**
- * Basic test of Euclidean distance.
- */
-TEST_CASE("EuclideanDistanceTest", "[KernelTest]")
-{
-  arma::vec a = "1.0 3.0 5.0 7.0";
-  arma::vec b = "4.0 0.0 2.0 0.0";
-
-  REQUIRE(EuclideanDistance::Evaluate(a, b) ==
-      Approx(sqrt(76.0)).epsilon(1e-7));
-  REQUIRE(EuclideanDistance::Evaluate(b, a) ==
-      Approx(sqrt(76.0)).epsilon(1e-7));
-}
-
-/**
- * Arbitrary test case for coverage.
- */
-TEST_CASE("ArbitraryCaseTest", "[KernelTest]")
-{
-  arma::vec a = "3.0 5.0 6.0 7.0";
-  arma::vec b = "1.0 2.0 1.0 0.0";
-
-  REQUIRE((LMetric<3, false>::Evaluate(a, b)) == Approx(503.0).epsilon(1e-7));
-  REQUIRE((LMetric<3, false>::Evaluate(b, a)) == Approx(503.0).epsilon(1e-7));
-
-  REQUIRE((LMetric<3, true>::Evaluate(a, b)) ==
-      Approx(7.95284762).epsilon(1e-7));
-  REQUIRE((LMetric<3, true>::Evaluate(b, a)) ==
-      Approx(7.95284762).epsilon(1e-7));
-}
-
-/**
- * Make sure two vectors of all zeros return zero distance, for a few different
- * powers.
- */
-TEST_CASE("LMetricZerosTest", "[KernelTest]")
-{
-  arma::vec a(250);
-  a.fill(0.0);
-
-  // We cannot use a loop because compilers seem to be unable to unroll the loop
-  // and realize the variable actually is knowable at compile-time.
-  REQUIRE(LMetric<1, false>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<1, true>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<2, false>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<2, true>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<3, false>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<3, true>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<4, false>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<4, true>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<5, false>::Evaluate(a, a) == 0);
-  REQUIRE(LMetric<5, true>::Evaluate(a, a) == 0);
-}
-
-/**
- * Simple test of Mahalanobis distance with unset covariance matrix in
- * constructor.
- */
-TEST_CASE("MDUnsetCovarianceTest", "[KernelTest]")
-{
-  MahalanobisDistance<false> md;
-  md.Covariance() = arma::eye<arma::mat>(4, 4);
-  arma::vec a = "1.0 2.0 2.0 3.0";
-  arma::vec b = "0.0 0.0 1.0 3.0";
-
-  REQUIRE(md.Evaluate(a, b) == Approx(6.0).epsilon(1e-7));
-  REQUIRE(md.Evaluate(b, a) == Approx(6.0).epsilon(1e-7));
-}
-
-/**
- * Simple test of Mahalanobis distance with unset covariance matrix in
- * constructor and t_take_root set to true.
- */
-TEST_CASE("MDRootUnsetCovarianceTest", "[KernelTest]")
-{
-  MahalanobisDistance<true> md;
-  md.Covariance() = arma::eye<arma::mat>(4, 4);
-  arma::vec a = "1.0 2.0 2.5 5.0";
-  arma::vec b = "0.0 2.0 0.5 8.0";
-
-  REQUIRE(md.Evaluate(a, b) == Approx(sqrt(14.0)).epsilon(1e-7));
-  REQUIRE(md.Evaluate(b, a) == Approx(sqrt(14.0)).epsilon(1e-7));
-}
-
-/**
- * Simple test of Mahalanobis distance setting identity covariance in
- * constructor.
- */
-TEST_CASE("MDEyeCovarianceTest", "[KernelTest]")
-{
-  MahalanobisDistance<false> md(4);
-  arma::vec a = "1.0 2.0 2.0 3.0";
-  arma::vec b = "0.0 0.0 1.0 3.0";
-
-  REQUIRE(md.Evaluate(a, b) == Approx(6.0).epsilon(1e-7));
-  REQUIRE(md.Evaluate(b, a) == Approx(6.0).epsilon(1e-7));
-}
-
-/**
- * Simple test of Mahalanobis distance setting identity covariance in
- * constructor and t_take_root set to true.
- */
-TEST_CASE("MDRootEyeCovarianceTest", "[KernelTest]")
-{
-  MahalanobisDistance<true> md(4);
-  arma::vec a = "1.0 2.0 2.5 5.0";
-  arma::vec b = "0.0 2.0 0.5 8.0";
-
-  REQUIRE(md.Evaluate(a, b) == Approx(sqrt(14.0)).epsilon(1e-7));
-  REQUIRE(md.Evaluate(b, a) == Approx(sqrt(14.0)).epsilon(1e-7));
-}
-
-/**
- * Simple test with diagonal covariance matrix.
- */
-TEST_CASE("MDDiagonalCovarianceTest", "[KernelTest]")
-{
-  arma::mat cov = arma::eye<arma::mat>(5, 5);
-  cov(0, 0) = 2.0;
-  cov(1, 1) = 0.5;
-  cov(2, 2) = 3.0;
-  cov(3, 3) = 1.0;
-  cov(4, 4) = 1.5;
-  MahalanobisDistance<false> md(cov);
-
-  arma::vec a = "1.0 2.0 2.0 4.0 5.0";
-  arma::vec b = "2.0 3.0 1.0 1.0 0.0";
-
-  REQUIRE(md.Evaluate(a, b) == Approx(52.0).epsilon(1e-7));
-  REQUIRE(md.Evaluate(b, a) == Approx(52.0).epsilon(1e-7));
-}
-
-/**
- * More specific case with more difficult covariance matrix.
- */
-TEST_CASE("MDFullCovarianceTest", "[KernelTest]")
-{
-  arma::mat cov = "1.0 2.0 3.0 4.0;"
-                  "0.5 0.6 0.7 0.1;"
-                  "3.4 4.3 5.0 6.1;"
-                  "1.0 2.0 4.0 1.0;";
-  MahalanobisDistance<false> md(cov);
-
-  arma::vec a = "1.0 2.0 2.0 4.0";
-  arma::vec b = "2.0 3.0 1.0 1.0";
-
-  REQUIRE(md.Evaluate(a, b) == Approx(15.7).epsilon(1e-7));
-  REQUIRE(md.Evaluate(b, a) == Approx(15.7).epsilon(1e-7));
-}
-
-/**
  * Simple test case for the cosine distance.
  */
-TEST_CASE("CosineDistanceSameAngleTest", "[KernelTest]")
+TEST_CASE("CosineSimilaritySameAngleTest", "[KernelTest]")
 {
   arma::vec a = "1.0 2.0 3.0";
   arma::vec b = "2.0 4.0 6.0";
 
-  REQUIRE(CosineDistance::Evaluate(a, b) == Approx(1.0).epsilon(1e-7));
-  REQUIRE(CosineDistance::Evaluate(b, a) == Approx(1.0).epsilon(1e-7));
+  REQUIRE(CosineSimilarity::Evaluate(a, b) == Approx(1.0).epsilon(1e-7));
+  REQUIRE(CosineSimilarity::Evaluate(b, a) == Approx(1.0).epsilon(1e-7));
 }
 
 /**
  * Now let's have them be orthogonal.
  */
-TEST_CASE("CosineDistanceOrthogonalTest", "[KernelTest]")
+TEST_CASE("CosineSimilarityOrthogonalTest", "[KernelTest]")
 {
   arma::vec a = "0.0 1.0";
   arma::vec b = "1.0 0.0";
 
-  REQUIRE(CosineDistance::Evaluate(a, b) == Approx(0.0).margin(1e-5));
-  REQUIRE(CosineDistance::Evaluate(b, a) == Approx(0.0).margin(1e-5));
+  REQUIRE(CosineSimilarity::Evaluate(a, b) == Approx(0.0).margin(1e-5));
+  REQUIRE(CosineSimilarity::Evaluate(b, a) == Approx(0.0).margin(1e-5));
 }
 
 /**
  * Some random angle test.
  */
-TEST_CASE("CosineDistanceRandomTest", "[KernelTest]")
+TEST_CASE("CosineSimilarityRandomTest", "[KernelTest]")
 {
   arma::vec a = "0.1 0.2 0.3 0.4 0.5";
   arma::vec b = "1.2 1.0 0.8 -0.3 -0.5";
 
-  REQUIRE(CosineDistance::Evaluate(a, b) ==
+  REQUIRE(CosineSimilarity::Evaluate(a, b) ==
       Approx(0.1385349024).epsilon(1e-7));
-  REQUIRE(CosineDistance::Evaluate(b, a) ==
+  REQUIRE(CosineSimilarity::Evaluate(b, a) ==
       Approx(0.1385349024).epsilon(1e-7));
 }
 
@@ -286,13 +104,6 @@ TEST_CASE("GaussianKernelTest", "[KernelTest]")
   REQUIRE(gk.Normalizer(2) == Approx(1.5707963267948963).epsilon(1e-7));
   REQUIRE(gk.Normalizer(3) == Approx(1.9687012432153019).epsilon(1e-7));
   REQUIRE(gk.Normalizer(4) == Approx(2.4674011002723386).epsilon(1e-7));
-  /* check the convolution integral */
-  REQUIRE(gk.ConvolutionIntegral(a, b) ==
-      Approx(0.024304474038457577).epsilon(1e-7));
-  REQUIRE(gk.ConvolutionIntegral(a, c) ==
-      Approx(0.024304474038457577).epsilon(1e-7));
-  REQUIRE(gk.ConvolutionIntegral(b, c) ==
-      Approx(0.024304474038457577).epsilon(1e-7));
 }
 
 TEST_CASE("GaussianKernelSerializationTest", "[KernelTest]")
@@ -329,11 +140,6 @@ TEST_CASE("SphericalKernelTest", "[KernelTest]")
   REQUIRE(sk.Normalizer(2) == Approx(0.78539816339744828).epsilon(1e-7));
   REQUIRE(sk.Normalizer(3) == Approx(0.52359877559829893).epsilon(1e-7));
   REQUIRE(sk.Normalizer(4) == Approx(0.30842513753404244).epsilon(1e-7));
-  /* check the convolution integral */
-  REQUIRE(sk.ConvolutionIntegral(a, b) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(sk.ConvolutionIntegral(a, c) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(sk.ConvolutionIntegral(b, c) ==
-      Approx(1.0021155029652784).epsilon(1e-7));
 }
 
 TEST_CASE("EpanechnikovKernelTest", "[KernelTest]")
@@ -356,11 +162,6 @@ TEST_CASE("EpanechnikovKernelTest", "[KernelTest]")
   REQUIRE(ek.Normalizer(2) == Approx(0.39269908169872414).epsilon(1e-7));
   REQUIRE(ek.Normalizer(3) == Approx(0.20943951023931956).epsilon(1e-7));
   REQUIRE(ek.Normalizer(4) == Approx(0.10280837917801415).epsilon(1e-7));
-  /* check the convolution integral */
-  REQUIRE(ek.ConvolutionIntegral(a, b) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(ek.ConvolutionIntegral(a, c) == Approx(0.0).epsilon(1e-7));
-  REQUIRE(ek.ConvolutionIntegral(b, c) ==
-      Approx(1.5263455690698258).epsilon(1e-7));
 }
 
 TEST_CASE("PolynomialKernelTest", "[KernelTest]")

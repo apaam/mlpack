@@ -4,7 +4,7 @@ This page describes how you can quickly get started using mlpack from Python and
 gives a few examples of usage, and pointers to deeper documentation.
 
 This quickstart guide is also available for [C++](cpp.md),
-[the command line](cli.md), [Julia](julia.md), [R](R.md), and [Go](go.md).
+[the command line](cli.md), [Julia](julia.md), [R](r.md), and [Go](go.md).
 
 ## Installing mlpack
 
@@ -26,8 +26,9 @@ Python bindings pre-installed:
 docker run -it mlpack/mlpack /bin/bash
 ```
 
-Otherwise, you can build the Python bindings from scratch using the
-documentation in the [main README](../../README.md).
+Building the Python bindings from scratch is a little more in-depth, though.
+For information on that, follow the instructions in the
+[installation guide](../user/install.md#compile-bindings-manually).
 
 ## Simple mlpack quickstart example
 
@@ -50,7 +51,7 @@ df = pd.read_csv('http://www.mlpack.org/datasets/covertype-small.csv.gz')
 
 # Split the labels.
 labels = df['label']
-dataset = df.drop('label', 1)
+dataset = df.drop('label', axis = 1)
 
 # Split the dataset using mlpack.  The output comes back as a dictionary,
 # which we'll unpack for clarity of code.
@@ -92,7 +93,7 @@ different mlpack learners, or to interface with other machine learning toolkits.
 ## Using mlpack for movie recommendations
 
 In this example, we'll train a collaborative filtering model using mlpack's
-[`cf()`](https://www.mlpack.org/doc/stable/python_documentation.html#cf) method.
+[`cf()`](../user/bindings/python.md#cf) method.
 We'll train this on the
 [MovieLens dataset](https://grouplens.org/datasets/movielens/), and then we'll
 use the model that we train to give recommendations.
@@ -161,7 +162,7 @@ have only shown a little bit of the functionality of mlpack.  Lots of other
 commands are available with different functionality.  A full list of each of
 these commands and full documentation can be found on the following page:
 
- - [Python documentation](https://www.mlpack.org/doc/stable/python_documentation.html)
+ - [Python documentation](../user/bindings/python.md)
 
 Also, mlpack is much more flexible from C++ and allows much greater
 functionality.  So, more complicated tasks are possible if you are willing to

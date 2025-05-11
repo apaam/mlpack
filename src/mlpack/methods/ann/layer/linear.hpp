@@ -76,7 +76,7 @@ class LinearType : public Layer<MatType>
    * Reset the layer parameter (weights and bias). The method is called to
    * assign the allocated memory to the internal learnable parameters.
    */
-  void SetWeights(typename MatType::elem_type* weightsPtr);
+  void SetWeights(const MatType& weightsIn);
 
   /**
    * Ordinary feed forward pass of a neural network, evaluating the function
@@ -97,11 +97,13 @@ class LinearType : public Layer<MatType>
    *
    * To compute the downstream gradient (g) the chain rule is used.
    *
-   * @param * (input) The propagated input activation.
+   * @param input The input data (x) given to the forward pass.
+   * @param output The propagated data (f(x)) resulting from Forward()
    * @param gy The backpropagated error.
    * @param g The calculated gradient.
    */
   void Backward(const MatType& /* input */,
+                const MatType& /* output */,
                 const MatType& gy,
                 MatType& g);
 
@@ -149,7 +151,7 @@ class LinearType : public Layer<MatType>
   size_t outSize;
 
   //! Locally-stored weight object.  This holds all the weights in a vectorized
-  //! form; i.e., the weights and the bias.
+  //! form; i.e., the weight and the bias.
   MatType weights;
 
   //! Locally-stored weight parameters.
@@ -165,7 +167,7 @@ class LinearType : public Layer<MatType>
 // Convenience typedefs.
 
 // Standard Linear layer using no regularization.
-typedef LinearType<arma::mat, NoRegularizer> Linear;
+using Linear = LinearType<arma::mat, NoRegularizer>;
 
 } // namespace mlpack
 

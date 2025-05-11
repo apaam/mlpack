@@ -8,7 +8,7 @@
  * 3-clause BSD license along with mlpack.  If not, see
  * http://www.opensource.org/licenses/BSD-3-Clause for more information.
  */
-#include <mlpack.hpp>
+#include <mlpack/core.hpp>
 
 // #define CATCH_CONFIG_MAIN  // catch.hpp will define main()
 #define CATCH_CONFIG_RUNNER  // we will define main()
@@ -16,17 +16,24 @@
 
 int main(int argc, char** argv)
 {
-  /**
-   * Uncomment these three lines if you want to test with different random seeds
-   * each run.  This is good for ensuring that a test's tolerance is sufficient
-   * across many different runs.
-   */
-  // size_t seed = std::time(NULL);
-  // mlpack::RandomSeed(seed);
+  Catch::Session session;
+  const int returnCode = session.applyCommandLine(argc, argv);
+  // Check for a command line error.
+  if (returnCode != 0)
+    return returnCode;
 
   std::cout << "mlpack version: " << mlpack::util::GetVersion() << std::endl;
   std::cout << "armadillo version: " << arma::arma_version::as_string()
       << std::endl;
 
-  return Catch::Session().run(argc, argv);
+  // Use Catch2 command-line to set the random seed.
+  // -rng-seed <'time'|number>
+  // If a number is provided this is used directly as the seed. Alternatively
+  // if the keyword 'time' is provided then the result of calling std::time(0)
+  // is used.
+  const size_t seed = session.config().rngSeed();
+  std::cout << "random seed: " << seed << std::endl;
+  mlpack::RandomSeed(seed);
+
+  return session.run();
 }

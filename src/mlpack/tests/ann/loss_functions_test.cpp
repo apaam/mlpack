@@ -50,8 +50,7 @@ TEST_CASE("HuberLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-                Approx(-0.8032).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.8032).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -69,8 +68,7 @@ TEST_CASE("HuberLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-            Approx(-0.0669333).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.0669333).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -94,8 +92,8 @@ TEST_CASE("PoissonNLLLossTest", "[LossFunctionsTest]")
   target = arma::mat("1.0 3.0 1.0 2.0 1.0 4.0 2.0 1.0");
 
   // Input required for module 4. Probs are in range [0, 1].
-  input4 = arma::mat("0.658502 0.445627 0.667651 0.310549 \
-                      0.589540 0.052568 0.549769 0.381504 ");
+  input4 = arma::mat("0.658502 0.445627 0.667651 0.310549 "
+                     "0.589540 0.052568 0.549769 0.381504 ");
   target4 = arma::mat("1.0 3.0 1.0 2.0 1.0 4.0 2.0 1.0");
 
   double loss1 = module1.Forward(input, target);
@@ -113,14 +111,14 @@ TEST_CASE("PoissonNLLLossTest", "[LossFunctionsTest]")
   module3.Backward(input, target, output3);
   module4.Backward(input4, target4, output4);
 
-  expOutput1 = arma::mat("0.214785 -0.0352148 0.710737 0.369129 \
-                         -0.106304 4.55591 -0.204015 0.0810902");
-  expOutput2 = arma::mat("1.71828 -0.281718 5.68589 2.95303\
-                         -0.850431 36.4473 -1.63212 0.648721");
-  expOutput3 = arma::mat("0.214785 -0.035215 0.710737 0.369129 \
-                         -0.106304 4.555913 -0.204015 0.081090");
-  expOutput4 = arma::mat("-0.064825 -0.716511 -0.062224 -0.680027 \
-                          -0.087030 -9.386517 -0.329736 -0.202650");
+  expOutput1 = arma::mat("0.214785 -0.0352148 0.710737 0.369129 "
+                         "-0.106304 4.55591 -0.204015 0.0810902");
+  expOutput2 = arma::mat("1.71828 -0.281718 5.68589 2.95303 "
+                         "-0.850431 36.4473 -1.63212 0.648721");
+  expOutput3 = arma::mat("0.214785 -0.035215 0.710737 0.369129 "
+                         "-0.106304 4.555913 -0.204015 0.081090");
+  expOutput4 = arma::mat("-0.064825 -0.716511 -0.062224 -0.680027 "
+                         "-0.087030 -9.386517 -0.329736 -0.202650");
 
   REQUIRE(output1.n_rows == input.n_rows);
   REQUIRE(output1.n_cols == input.n_cols);
@@ -171,7 +169,7 @@ TEST_CASE("SimpleKLDivergenceTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == Approx(-5.8127).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-5.8127).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -189,7 +187,7 @@ TEST_CASE("SimpleKLDivergenceTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == Approx(-0.484392).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.484392).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -202,7 +200,7 @@ TEST_CASE("SimpleMeanSquaredLogarithmicErrorTest", "[LossFunctionsTest]")
 {
   arma::mat input, target, output, expectedOutput;
   double loss;
-  MeanSquaredLogarithmicError module;
+  MeanSquaredLogarithmicError module(true);
 
   // Test for sum reduction.
   input = arma::mat("-0.0494 1.1958 1.0486 -0.2121 1.6028 0.0737 -0.7091 "
@@ -221,8 +219,7 @@ TEST_CASE("SimpleMeanSquaredLogarithmicErrorTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(-10.5619).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-10.5619).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -235,7 +232,7 @@ TEST_CASE("SimpleMeanSquaredLogarithmicErrorTest", "[LossFunctionsTest]")
 
   // Test the Backward function on a single input.
   module.Backward(input, target, output);
-  REQUIRE(arma::accu(output) == Approx(-0.1917880483011872).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.1917880483011872).epsilon(1e-3));
   REQUIRE(output.n_elem == 1);
 }
 
@@ -245,7 +242,7 @@ TEST_CASE("SimpleMeanSquaredLogarithmicErrorTest", "[LossFunctionsTest]")
 TEST_CASE("SimpleMeanSquaredErrorTest", "[LossFunctionsTest]")
 {
   arma::mat input, output, target;
-  MeanSquaredError module(false);
+  MeanSquaredError module;
 
   // Test the Forward function on a user generated input and compare it against
   // the manually calculated result.
@@ -257,9 +254,9 @@ TEST_CASE("SimpleMeanSquaredErrorTest", "[LossFunctionsTest]")
   // Test the Backward function.
   module.Backward(input, target, output);
   // We subtract a zero vector, so according to the used backward formula:
-  // output = 2 * (input - target) / target.n_cols,
+  // output = 2 * (input - target) / target.n_rows,
   // output * nofColumns / 2 should be equal to input.
-  CheckMatrices(input, output * output.n_cols / 2);
+  CheckMatrices(input, output * output.n_rows / 2);
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
 
@@ -272,7 +269,7 @@ TEST_CASE("SimpleMeanSquaredErrorTest", "[LossFunctionsTest]")
   // Test the Backward function on a single input.
   module.Backward(input, target, output);
   // Test whether the output is negative.
-  REQUIRE(arma::accu(output) == -2);
+  REQUIRE(accu(output) == -2);
   REQUIRE(output.n_elem == 1);
 
   // Test for sum reduction
@@ -285,7 +282,7 @@ TEST_CASE("SimpleMeanSquaredErrorTest", "[LossFunctionsTest]")
   // Test the Backward function on a single input.
   module.Backward(input, target, output);
   // Test whether the output is negative.
-  REQUIRE(arma::accu(output) == -2);
+  REQUIRE(accu(output) == -2);
   REQUIRE(output.n_elem == 1);
 }
 
@@ -440,8 +437,8 @@ TEST_CASE("SimpleEarthMoverDistanceLayerTest", "[LossFunctionsTest]")
   REQUIRE(output.n_rows == input2.n_rows);
   REQUIRE(output.n_cols == input2.n_cols);
 
-   // Test for mean reduction.
-   module.Reduction() = false;
+  // Test for mean reduction.
+  module.Reduction() = false;
   input3 = arma::mat("-0.0494 -1.1958 -1.0486 -0.2121 1.6028 0.0737 -0.7091 "
       "0.8612 0.9639 0.9648 0.0745 0.5924");
   target3 = arma::mat("0.4316 0.0164 -0.4478 1.1452 0.5106 0.9255 0.5571 "
@@ -459,8 +456,7 @@ TEST_CASE("SimpleEarthMoverDistanceLayerTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input3, target3, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == 
-      Approx(-0.168867).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.168867).epsilon(1e-3));
   REQUIRE(output.n_rows == input3.n_rows);
   REQUIRE(output.n_cols == input3.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -615,7 +611,7 @@ TEST_CASE("SimpleMeanBiasErrorTest", "[LossFunctionsTest]")
   // Test the backward function.
   module.Backward(input, target, output);
 
-  for(double el : output)
+  for (double el : output)
     REQUIRE(el == -1);
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
@@ -632,9 +628,9 @@ TEST_CASE("SimpleMeanBiasErrorTest", "[LossFunctionsTest]")
   // Test the backward function
   module.Backward(input, target, output);
 
-  for(double el : output)
+  for (double el : output)
     REQUIRE(el == Approx(-0.0833).epsilon(1e-3));
-  REQUIRE(arma::accu(output) == Approx(-1).epsilon(1e-5));
+  REQUIRE(accu(output) == Approx(-1).epsilon(1e-5));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
 }
@@ -674,7 +670,7 @@ TEST_CASE("LogCoshLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::accu(output) == Approx(2.46962).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(2.46962).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
 
@@ -687,7 +683,7 @@ TEST_CASE("LogCoshLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::accu(output) == Approx(0.49392).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(0.49392).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
 }
@@ -718,7 +714,7 @@ TEST_CASE("HingeEmbeddingLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == Approx(6).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(6).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 1e-3);
@@ -738,7 +734,7 @@ TEST_CASE("HingeEmbeddingLossTest", "[LossFunctionsTest]")
 
   // Test the backward function
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == Approx(0.5).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(0.5).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -791,7 +787,7 @@ TEST_CASE("CosineEmbeddingLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input1, input1, output);
-  REQUIRE(arma::accu(output) == Approx(0.0).margin(1e-6));
+  REQUIRE(accu(output) == Approx(0.0).margin(1e-6));
 
   // Check for dissimilarity.
   module.Similarity() = false;
@@ -800,7 +796,7 @@ TEST_CASE("CosineEmbeddingLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input1, input1, output);
-  REQUIRE(arma::accu(output) == Approx(0.0).margin(1e-6));
+  REQUIRE(accu(output) == Approx(0.0).margin(1e-6));
 
   input1 = arma::mat(3, 2);
   input2 = arma::mat(3, 2);
@@ -816,7 +812,7 @@ TEST_CASE("CosineEmbeddingLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input1, input2, output);
-  REQUIRE(arma::accu(output) == Approx(0.06324556).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(0.06324556).epsilon(1e-3));
 }
 
 /*
@@ -832,14 +828,14 @@ TEST_CASE("MarginRankingLossTest", "[LossFunctionsTest]")
       "-4.8090 4.3455 5.2070");
   input2 = arma::mat("-4.5288 -9.2766 -0.5882 -5.6643 -6.0175 8.8506 3.4759 "
       "-9.4886 2.2755 8.4951");
-  expectedOutput = { { 0.0, 0.0,  1.0, 0.0,  1.0, -1.0, 0.0, 0.0,  1.0, -1.0 }, 
-                     { 0.0, 0.0, -1.0, 0.0, -1.0,  1.0, 0.0, 0.0, -1.0,  1.0 } };
-  input = arma::join_cols(input1, input2);
+  expectedOutput = {{ 0.0, 0.0,  1.0, 0.0,  1.0, -1.0, 0.0, 0.0,  1.0, -1.0 },
+                    { 0.0, 0.0, -1.0, 0.0, -1.0,  1.0, 0.0, 0.0, -1.0,  1.0 }};
+  input = join_cols(input1, input2);
   target = arma::mat("1 1 -1 1 -1 1 1 1 -1 1");
 
-  // Test the forward function
-  // loss should be 30.3530 
-  // value calculated using torch.nn.MarginRankingLoss(margin=1.0,reduction='sum')
+  // Test the forward function; loss should be 30.3530.
+  // Value calculated using:
+  //     torch.nn.MarginRankingLoss(margin=1.0,reduction='sum')
   loss = module.Forward(input, target);
   REQUIRE(loss == Approx(30.3530).epsilon(1e-3));
 
@@ -852,16 +848,16 @@ TEST_CASE("MarginRankingLossTest", "[LossFunctionsTest]")
   // Test for mean reduction by modifying reduction parameter using accessor.
   module.Reduction() = false;
 
-  // Test the forward function
-  // loss should be 3.0353
-  // value calculated using torch.nn.MarginRankingLoss(margin=1.0,reduction='mean')
+  // Test the forward function; loss should be 3.0353.
+  // Value calculated using:
+  //     torch.nn.MarginRankingLoss(margin=1.0,reduction='mean')
   loss = module.Forward(input, target);
   REQUIRE(loss == Approx(3.0353).epsilon(1e-5));
 
-  // Test the backward function
+  // Test the backward function.
   module.Backward(input, target, output);
-  expectedOutput = { { 0.0, 0.0,  0.1, 0.0,  0.1, -0.1, 0.0, 0.0,  0.1, -0.1 },
-                     { 0.0, 0.0, -0.1, 0.0, -0.1,  0.1, 0.0, 0.0, -0.1,  0.1 } };
+  expectedOutput = {{ 0.0, 0.0,  0.1, 0.0,  0.1, -0.1, 0.0, 0.0,  0.1, -0.1 },
+                    { 0.0, 0.0, -0.1, 0.0, -0.1,  0.1, 0.0, 0.0, -0.1,  0.1 }};
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -897,8 +893,7 @@ TEST_CASE("SoftMarginLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module1.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(-1.48227).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-1.48227).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -917,8 +912,7 @@ TEST_CASE("SoftMarginLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module2.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(-0.164697).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.164697).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -942,8 +936,7 @@ TEST_CASE("MeanAbsolutePercentageErrorTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(-105.625).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-105.625).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -1007,7 +1000,7 @@ TEST_CASE("TripletMarginLossTest")
   // Test the Backward function on a single input.
   module.Backward(input, negative, output);
   // Test whether the output is negative.
-  REQUIRE(arma::accu(output) == -12);
+  REQUIRE(accu(output) == -12);
   REQUIRE(output.n_elem == 1);
 }
 
@@ -1071,7 +1064,7 @@ TEST_CASE("HingeLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function
   module1.Backward(input, target, output);
-  REQUIRE(arma::accu(output) == Approx(-5).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-5).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
 
@@ -1083,7 +1076,7 @@ TEST_CASE("HingeLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module2.Backward(input, target, output);
-  REQUIRE(arma::accu(output) == Approx(-0.41667).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-0.41667).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
 }
@@ -1118,8 +1111,7 @@ TEST_CASE("MultiLabelSoftMarginLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module1.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(0.505909).epsilon(1e-5));
+  REQUIRE(accu(output) == Approx(0.505909).epsilon(1e-5));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -1138,8 +1130,7 @@ TEST_CASE("MultiLabelSoftMarginLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module2.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(0.168636).epsilon(1e-5));
+  REQUIRE(accu(output) == Approx(0.168636).epsilon(1e-5));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -1177,8 +1168,7 @@ TEST_CASE("MultiLabelSoftMarginLossWeightedTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module1.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(1.43577).epsilon(1e-5));
+  REQUIRE(accu(output) == Approx(1.43577).epsilon(1e-5));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -1197,8 +1187,7 @@ TEST_CASE("MultiLabelSoftMarginLossWeightedTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module2.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) ==
-      Approx(0.358943).epsilon(1e-5));
+  REQUIRE(accu(output) == Approx(0.358943).epsilon(1e-5));
   REQUIRE(output.n_rows ==input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -1229,7 +1218,7 @@ TEST_CASE("NegativeLogLikelihoodLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == Approx(-4).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-4).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);
@@ -1246,7 +1235,7 @@ TEST_CASE("NegativeLogLikelihoodLossTest", "[LossFunctionsTest]")
 
   // Test the Backward function.
   module.Backward(input, target, output);
-  REQUIRE(arma::as_scalar(arma::accu(output)) == Approx(-1).epsilon(1e-3));
+  REQUIRE(accu(output) == Approx(-1).epsilon(1e-3));
   REQUIRE(output.n_rows == input.n_rows);
   REQUIRE(output.n_cols == input.n_cols);
   CheckMatrices(output, expectedOutput, 0.1);

@@ -86,19 +86,19 @@ Linear3DType<MatType, RegularizerType>::operator=(
 
 template<typename MatType, typename RegularizerType>
 void Linear3DType<MatType, RegularizerType>::SetWeights(
-    typename MatType::elem_type* weightsPtr)
+    const MatType& weightsIn)
 {
-  MakeAlias(weights, weightsPtr, outSize * this->inputDimensions[0] + outSize,
+  MakeAlias(weights, weightsIn, outSize * this->inputDimensions[0] + outSize,
       1);
-  MakeAlias(weight, weightsPtr, outSize, this->inputDimensions[0]);
-  MakeAlias(bias, weightsPtr + weight.n_elem, outSize, 1);
+  MakeAlias(weight, weightsIn, outSize, this->inputDimensions[0]);
+  MakeAlias(bias, weightsIn, outSize, 1, weight.n_elem);
 }
 
 template<typename MatType, typename RegularizerType>
 void Linear3DType<MatType, RegularizerType>::Forward(
     const MatType& input, MatType& output)
 {
-  typedef typename arma::Cube<typename MatType::elem_type> CubeType;
+  using CubeType = arma::Cube<typename MatType::elem_type>;
 
   const size_t nPoints = input.n_rows / this->inputDimensions[0];
   const size_t batchSize = input.n_cols;
@@ -112,22 +112,23 @@ void Linear3DType<MatType, RegularizerType>::Forward(
     // Shape of inputTemp : (inSize, nPoints, batchSize).
     MatType z = weight * inputTemp.slice(i);
     z.each_col() += bias;
-    output.col(i) = arma::vectorise(z);
+    output.col(i) = vectorise(z);
   }
 }
 
 template<typename MatType, typename RegularizerType>
 void Linear3DType<MatType, RegularizerType>::Backward(
     const MatType& /* input */,
+    const MatType& /* output */,
     const MatType& gy,
     MatType& g)
 {
-  typedef typename arma::Cube<typename MatType::elem_type> CubeType;
+  using CubeType = arma::Cube<typename MatType::elem_type>;
 
   if (gy.n_rows % outSize != 0)
   {
-    Log::Fatal << "Number of rows in propagated error must be divisible by \
-        outSize." << std::endl;
+    Log::Fatal << "Number of rows in propagated error must be divisible by "
+        << "outSize." << std::endl;
   }
 
   const size_t nPoints = gy.n_rows / outSize;
@@ -140,7 +141,7 @@ void Linear3DType<MatType, RegularizerType>::Backward(
   {
     // Shape of weight : (outSize, inSize).
     // Shape of gyTemp : (outSize, nPoints, batchSize).
-    g.col(i) = arma::vectorise(weight.t() * gyTemp.slice(i));
+    g.col(i) = vectorise(weight.t() * gyTemp.slice(i));
   }
 }
 
@@ -150,7 +151,7 @@ void Linear3DType<MatType, RegularizerType>::Gradient(
     const MatType& error,
     MatType& gradient)
 {
-  typedef typename arma::Cube<typename MatType::elem_type> CubeType;
+  using CubeType = arma::Cube<typename MatType::elem_type>;
 
   if (error.n_rows % outSize != 0)
     Log::Fatal << "Propagated error matrix has invalid dimension!" << std::endl;
@@ -171,11 +172,10 @@ void Linear3DType<MatType, RegularizerType>::Gradient(
     dW.slice(i) = errorTemp.slice(i) * inputTemp.slice(i).t();
   }
 
-  gradient.submat(0, 0, weight.n_elem - 1, 0)
-      = arma::vectorise(arma::sum(dW, 2));
+  gradient.submat(0, 0, weight.n_elem - 1, 0) = vectorise(sum(dW, 2));
 
   gradient.submat(weight.n_elem, 0, weights.n_elem - 1, 0)
-      = arma::vectorise(arma::sum(arma::sum(errorTemp, 2), 1));
+      = vectorise(sum(sum(errorTemp, 2), 1));
 
   regularizer.Evaluate(weights, gradient);
 }

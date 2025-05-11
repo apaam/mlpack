@@ -5,7 +5,7 @@ command-line and gives a few examples of usage, and pointers to deeper
 documentation.
 
 This quickstart guide is also available for [C++](cpp.md), [Python](python.md),
-[R](R.md), [Julia](julia.md), and [Go](go.md).
+[R](r.md), [Julia](julia.md), and [Go](go.md).
 
 ## Installing mlpack
 
@@ -32,8 +32,9 @@ docker run -it mlpack/mlpack /bin/bash
 This Docker image has mlpack's command-line bindings already built and
 installed.
 
-If you prefer to build mlpack from scratch, see the
-[main README](../../README.md).
+If you prefer to build the command-line programs from scratch, follow the
+instructions in the
+[installation guide](../user/install.md#compile-bindings-manually).
 
 ## Simple quickstart example
 
@@ -164,6 +165,7 @@ Out for Justice (1991)
 Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)
 Schindler's List (1993)
 ```
+
 ## Next steps with mlpack
 
 Now that you have done some simple work with mlpack, you have seen how it can
@@ -172,7 +174,7 @@ these two examples have only shown a little bit of the functionality of mlpack.
 Lots of other commands are available with different functionality.  A full list
 of commands and full documentation for each can be found on the following page:
 
- - [CLI program documentation](https://www.mlpack.org/doc/stable/cli_documentation.html)
+ - [CLI program documentation](https://www.mlpack.org/doc/user/bindings/cli.html)
 
 Also, mlpack is much more flexible from C++ and allows much greater
 functionality.  So, more complicated tasks are possible if you are willing to

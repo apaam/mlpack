@@ -60,7 +60,7 @@ void RecurrentAttention<InputType, OutputType>::Forward(
   // Initialize the action input.
   if (initialInput.is_empty())
   {
-    initialInput = arma::zeros(outSize, input.n_cols);
+    initialInput = zeros(outSize, input.n_cols);
   }
 
   // Propagate through the action and recurrent module.
@@ -76,7 +76,7 @@ void RecurrentAttention<InputType, OutputType>::Forward(
     }
 
     // Initialize the glimpse input.
-    InputType glimpseInput = arma::zeros(input.n_elem, 2);
+    InputType glimpseInput = zeros(input.n_elem, 2);
     glimpseInput.col(0) = input;
     glimpseInput.submat(0, 1, actionOutput.n_elem - 1, 1) =
         actionOutput;
@@ -123,18 +123,18 @@ void RecurrentAttention<InputType, OutputType>::Backward(
     size_t weights = rnnModule->Parameters().n_elem +
         actionModule->Parameters().n_elem;
 
-    intermediateGradient = arma::zeros(weights, 1);
-    attentionGradient = arma::zeros(weights, 1);
+    intermediateGradient = zeros(weights, 1);
+    attentionGradient = zeros(weights, 1);
 
     // Initialize the action error.
-    actionError = arma::zeros(actionOutput.n_rows, actionOutput.n_cols);
+    actionError = zeros(actionOutput.n_rows, actionOutput.n_cols);
   }
 
   // Propagate the attention gradients.
   if (backwardStep == 0)
   {
     size_t offset = 0;
-    //  TODO: what if rnnModule has a Model()?
+    // TODO: what if rnnModule has a Model()?
     rnnGradient = OutputType(intermediateGradient.memptr() + offset,
         rnnModule->Parameters().n_rows, rnnModule->Parameters().n_cols, false,
         false);

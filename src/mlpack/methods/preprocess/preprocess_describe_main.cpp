@@ -64,7 +64,9 @@ BINDING_EXAMPLE(
 
 // See also...
 BINDING_SEE_ALSO("@preprocess_binarize", "#preprocess_binarize");
+#if BINDING_TYPE == BINDING_TYPE_CLI
 BINDING_SEE_ALSO("@preprocess_imputer", "#preprocess_imputer");
+#endif
 BINDING_SEE_ALSO("@preprocess_split", "#preprocess_split");
 
 // Define parameters for data.
@@ -92,7 +94,7 @@ double SumNthPowerDeviations(const arma::rowvec& input,
                              const double& fMean,
                              size_t n)
 {
-  return arma::sum(arma::pow(input - fMean, static_cast<double>(n)));
+  return sum(pow(input - fMean, static_cast<double>(n)));
 }
 
 /**
@@ -184,35 +186,35 @@ void BINDING_FUNCTION(util::Params& params, util::Timers& timers)
 
   timers.Start("statistics");
   // Print the headers.
-  Log::Info << setw(width) << "dim" << setw(width) << "var" << setw(width) << 
-      "mean" << setw(width) << "std" << setw(width) << setw(width) << setw(width) << 
-      "median" << setw(width) << "min" << setw(width) << "max" << setw(width) << 
-      "range" << setw(width) << "skew" << setw(width) << "kurt" << setw(width) << 
-      "SE" << endl;
+  Log::Info << setw(width) << "dim" << setw(width) << "var" << setw(width)
+      << "mean" << setw(width) << "std" << setw(width)
+      << "median" << setw(width) << "min" << setw(width)
+      << "max" << setw(width) << "range" << setw(width)
+      << "skew" << setw(width) << "kurt" << setw(width) << "SE" << endl;
 
   // Lambda function to print out the results.
   auto PrintStatResults = [&](size_t dim, bool rowMajor)
   {
     arma::rowvec feature;
     if (rowMajor)
-      feature = arma::conv_to<arma::rowvec>::from(data.col(dim));
+      feature = ConvTo<arma::rowvec>::From(data.col(dim));
     else
       feature = data.row(dim);
 
     // f at the front of the variable names means "feature".
-    const double fMax = arma::max(feature);
-    const double fMin = arma::min(feature);
+    const double fMax = max(feature);
+    const double fMin = min(feature);
     const double fMean = arma::mean(feature);
     const double fStd = arma::stddev(feature, population);
 
     // Print statistics of the given dimension.
-    Log::Info << setprecision(precision) << setw(width) << dim << 
-        setw(width) << arma::var(feature, population) << 
-        setw(width) << fMean << 
+    Log::Info << setprecision(precision) << setw(width) << dim <<
+        setw(width) << arma::var(feature, population) <<
+        setw(width) << fMean <<
         setw(width) << fStd <<
-        setw(width) << arma::median(feature) << 
-        setw(width) << fMin << 
-        setw(width) << fMax << 
+        setw(width) << arma::median(feature) <<
+        setw(width) << fMin <<
+        setw(width) << fMax <<
         setw(width) << (fMax - fMin) <<
         setw(width) << Skewness(feature, fStd, fMean, population) <<
         setw(width) << Kurtosis(feature, fStd, fMean, population) <<

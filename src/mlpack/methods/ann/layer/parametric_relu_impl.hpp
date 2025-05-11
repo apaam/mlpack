@@ -73,10 +73,9 @@ PReLUType<MatType>::operator=(PReLUType&& other)
 }
 
 template<typename MatType>
-void PReLUType<MatType>::SetWeights(
-    typename MatType::elem_type* weightsPtr)
+void PReLUType<MatType>::SetWeights(const MatType& weightsIn)
 {
-  MakeAlias(alpha, weightsPtr, 1, 1);
+  MakeAlias(alpha, weightsIn, 1, 1);
 }
 
 template<typename MatType>
@@ -87,7 +86,7 @@ void PReLUType<MatType>::CustomInitialize(
   if (elements != 1)
   {
     throw std::invalid_argument("PReLUType::CustomInitialize(): wrong "
-        "elements size!"); 
+        "elements size!");
   }
 
   W(0) = userAlpha;
@@ -98,17 +97,17 @@ void PReLUType<MatType>::Forward(
     const MatType& input, MatType& output)
 {
   output = input;
-  if (this->training)
-  {
-    #pragma omp for
-    for (size_t i = 0; i < input.n_elem; ++i)
-      output(i) *= (input(i) >= 0) ? 1 : alpha(0);
-  }
+  #pragma omp for
+  for (size_t i = 0; i < input.n_elem; ++i)
+    output(i) *= (input(i) >= 0) ? 1 : alpha(0);
 }
 
 template<typename MatType>
 void PReLUType<MatType>::Backward(
-    const MatType& input, const MatType& gy, MatType& g)
+    const MatType& input,
+    const MatType& /* output */,
+    const MatType& gy,
+    MatType& g)
 {
   MatType derivative;
   derivative.set_size(arma::size(input));
@@ -125,9 +124,9 @@ void PReLUType<MatType>::Gradient(
     const MatType& error,
     MatType& gradient)
 {
-  MatType zeros = arma::zeros<MatType>(input.n_rows, input.n_cols);
+  MatType zerosMat = zeros<MatType>(input.n_rows, input.n_cols);
   gradient.set_size(1, 1);
-  gradient(0) = arma::accu(error % arma::min(zeros, input)) / input.n_cols;
+  gradient(0) = accu(error % min(zerosMat, input)) / input.n_cols;
 }
 
 template<typename MatType>

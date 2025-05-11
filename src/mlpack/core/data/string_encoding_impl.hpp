@@ -66,13 +66,13 @@ void StringEncoding<EncodingPolicyType, DictionaryType>::CreateMap(
     const std::string& input,
     const TokenizerType& tokenizer)
 {
-  MLPACK_STRING_VIEW strView(input);
+  std::string_view strView(input);
   auto token = tokenizer(strView);
 
   static_assert(
-      std::is_same<typename std::remove_reference<decltype(token)>::type,
-                   typename std::remove_reference<typename DictionaryType::
-                      TokenType>::type>::value,
+      std::is_same_v<std::remove_reference_t<decltype(token)>,
+                     std::remove_reference_t<typename DictionaryType::
+                        TokenType>>,
       "The dictionary token type doesn't match the return value type "
       "of the tokenizer.");
 
@@ -112,13 +112,13 @@ EncodeHelper(const std::vector<std::string>& input,
   // The first pass adds the extracted tokens to the dictionary.
   for (size_t i = 0; i < input.size(); ++i)
   {
-    MLPACK_STRING_VIEW strView(input[i]);
+    std::string_view strView(input[i]);
     auto token = tokenizer(strView);
 
     static_assert(
-        std::is_same<typename std::remove_reference<decltype(token)>::type,
-                     typename std::remove_reference<typename DictionaryType::
-                        TokenType>::type>::value,
+        std::is_same_v<std::remove_reference_t<decltype(token)>,
+                       std::remove_reference_t<typename DictionaryType::
+                          TokenType>>,
         "The dictionary token type doesn't match the return value type "
         "of the tokenizer.");
 
@@ -143,7 +143,7 @@ EncodeHelper(const std::vector<std::string>& input,
   // The second pass writes the encoded values to the output.
   for (size_t i = 0; i < input.size(); ++i)
   {
-    MLPACK_STRING_VIEW strView(input[i]);
+    std::string_view strView(input[i]);
     auto token = tokenizer(strView);
     size_t numTokens = 0;
 
@@ -163,8 +163,8 @@ EncodeHelper(const std::vector<std::string>& input,
              std::vector<std::vector<ElemType>>& output,
              const TokenizerType& tokenizer,
              PolicyType& policy,
-             typename std::enable_if<StringEncodingPolicyTraits<
-                 PolicyType>::onePassEncoding>::type*)
+             std::enable_if_t<StringEncodingPolicyTraits<
+                 PolicyType>::onePassEncoding>*)
 {
   policy.Reset();
 
@@ -172,13 +172,13 @@ EncodeHelper(const std::vector<std::string>& input,
   // at once.
   for (size_t i = 0; i < input.size(); ++i)
   {
-    MLPACK_STRING_VIEW strView(input[i]);
+    std::string_view strView(input[i]);
     auto token = tokenizer(strView);
 
     static_assert(
-        std::is_same<typename std::remove_reference<decltype(token)>::type,
-                     typename std::remove_reference<typename DictionaryType::
-                        TokenType>::type>::value,
+        std::is_same_v<std::remove_reference_t<decltype(token)>,
+                       std::remove_reference_t<typename DictionaryType::
+                          TokenType>>,
         "The dictionary token type doesn't match the return value type "
         "of the tokenizer.");
 

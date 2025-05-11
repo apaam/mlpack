@@ -414,8 +414,8 @@ TEST_CASE_METHOD(LogisticRegressionTestFixture, "LRMaxIterationsChangeTest",
   // arma::all function checks that each element of the vector is equal to zero.
   if (arma::all((parameters1-parameters2) == 0))
   {
-    FAIL("parameters1 and parameters2 are equal. \
-         Parameter(Max Iteration) has no effect on the output");
+    FAIL("parameters1 and parameters2 are equal. "
+         "Parameter(Max Iteration) has no effect on the output");
   }
 }
 
@@ -466,8 +466,8 @@ TEST_CASE_METHOD(LogisticRegressionTestFixture, "LRLambdaChangeTest",
   // arma::all function checks that each element of the vector is equal to zero.
   if (arma::all((parameters1-parameters2) == 0))
   {
-    FAIL("parameters1 and parameters2 are equal. \
-         Parameter(lambda) has no effect on the output");
+    FAIL("parameters1 and parameters2 are equal. "
+         "Parameter(lambda) has no effect on the output");
   }
 }
 
@@ -520,8 +520,8 @@ TEST_CASE_METHOD(LogisticRegressionTestFixture, "LRStepSizeChangeTest",
   // arma::all function checks that each element of the vector is equal to zero.
   if (arma::all((parameters1-parameters2) == 0))
   {
-    FAIL("parameters1 and parameters2 are equal. \
-         Parameter(Step Size) has no effect on the output");
+    FAIL("parameters1 and parameters2 are equal. "
+         "Parameter(Step Size) has no effect on the output");
   }
 }
 
@@ -573,8 +573,8 @@ TEST_CASE_METHOD(LogisticRegressionTestFixture, "LROptimizerChangeTest",
   // arma::all function checks that each element of the vector is equal to zero.
   if (arma::all((parameters1 - parameters2) == 0))
   {
-    FAIL("parameters1 and parameters2 are equal. \
-         Parameter(Step Size) has no effect on the output");
+    FAIL("parameters1 and parameters2 are equal. "
+         "Parameter(Step Size) has no effect on the output");
   }
 }
 
@@ -625,5 +625,27 @@ TEST_CASE_METHOD(LogisticRegressionTestFixture, "LRDecisionBoundaryTest",
       params.Get<arma::Row<size_t>>("predictions");
 
   // Check that the output changed when the decision boundary moved.
-  REQUIRE(arma::accu(output1 != output2) > 0);
+  REQUIRE(accu(output1 != output2) > 0);
+}
+
+/**
+ * Check that running the binding with print_training_accuracy set to true
+ * does not crash.
+ **/
+TEST_CASE_METHOD(LogisticRegressionTestFixture, "LRPrintTrainingAccuracyTest",
+                "[LogisticRegressionMainTest][BindingTests]")
+{
+  constexpr int N = 100;
+  constexpr int D = 5;
+
+  arma::mat trainX = arma::randu<arma::mat>(D, N);
+  arma::Row<size_t> trainY = arma::randi<arma::Row<size_t>>(N,
+      DistrParam(0, 1));
+
+  SetInputParam("training", trainX);
+  SetInputParam("labels", trainY);
+  SetInputParam("print_training_accuracy", true);
+
+  // Run the binding with print_training_accuracy set to true.
+  REQUIRE_NOTHROW(RUN_BINDING());
 }

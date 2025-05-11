@@ -44,7 +44,7 @@ Estimate(const arma::mat& observations,
          arma::vec& weights,
          const bool useInitialModel)
 {
-  if (std::is_same<Distribution, DiagonalGaussianDistribution>::value)
+  if (std::is_same_v<Distribution, DiagonalGaussianDistribution<>>)
   {
     #ifdef _WIN32
       Log::Warn << "Cannot use arma::gmm_diag on Visual Studio due to OpenMP"
@@ -55,8 +55,8 @@ Estimate(const arma::mat& observations,
       return;
     #endif
   }
-  else if (std::is_same<CovarianceConstraintPolicy, DiagonalConstraint>::value
-      && std::is_same<Distribution, GaussianDistribution>::value)
+  else if (std::is_same_v<CovarianceConstraintPolicy, DiagonalConstraint>
+      && std::is_same_v<Distribution, GaussianDistribution<>>)
   {
     // EMFit::Estimate() using DiagonalConstraint with GaussianDistribution
     // makes use of slower implementation.
@@ -92,7 +92,7 @@ Estimate(const arma::mat& observations,
       // Gaussian.  First we make an alias of the condLogProb vector.
       arma::vec condLogProbAlias = condLogProb.unsafe_col(i);
       dists[i].LogProbability(observations, condLogProbAlias);
-      condLogProbAlias += log(weights[i]);
+      condLogProbAlias += std::log(weights[i]);
     }
 
     // Normalize row-wise.
@@ -118,7 +118,7 @@ Estimate(const arma::mat& observations,
     {
       // Don't update if there's no probability of the Gaussian having points.
       if (probRowSums[i] != -std::numeric_limits<double>::infinity())
-        dists[i].Mean() = observations * arma::exp(condLogProb.col(i) -
+        dists[i].Mean() = observations * exp(condLogProb.col(i) -
                                                    probRowSums[i]);
       else
         continue;
@@ -129,11 +129,11 @@ Estimate(const arma::mat& observations,
 
       // If the distribution is DiagonalGaussianDistribution, calculate the
       // covariance only with diagonal components.
-      if (std::is_same<Distribution, DiagonalGaussianDistribution>::value)
+      if (std::is_same_v<Distribution, DiagonalGaussianDistribution<>>)
       {
-        arma::vec covariance = arma::sum((tmp % tmp) %
-            (arma::ones<arma::vec>(observations.n_rows) *
-            trans(arma::exp(condLogProb.col(i) - probRowSums[i]))), 1);
+        arma::vec covariance = sum((tmp % tmp) %
+            (ones<arma::vec>(observations.n_rows) *
+            trans(exp(condLogProb.col(i) - probRowSums[i]))), 1);
 
         // Apply covariance constraint.
         constraint.ApplyConstraint(covariance);
@@ -141,7 +141,7 @@ Estimate(const arma::mat& observations,
       }
       else
       {
-        arma::mat tmpB = tmp.each_row() % trans(arma::exp(condLogProb.col(i) -
+        arma::mat tmpB = tmp.each_row() % trans(exp(condLogProb.col(i) -
                                                           probRowSums[i]));
         arma::mat covariance = tmp * trans(tmpB);
 
@@ -153,7 +153,7 @@ Estimate(const arma::mat& observations,
 
     // Calculate the new values for omega using the updated conditional
     // probabilities.
-    weights = arma::exp(probRowSums - std::log(observations.n_cols));
+    weights = exp(probRowSums - std::log(observations.n_cols));
 
     // Update values of l; calculate new log-likelihood.
     lOld = l;
@@ -196,7 +196,7 @@ Estimate(const arma::mat& observations,
       // Gaussian.  First we make an alias of the condLogProb vector.
       arma::vec condLogProbAlias = condLogProb.unsafe_col(i);
       dists[i].LogProbability(observations, condLogProbAlias);
-      condLogProbAlias += log(weights[i]);
+      condLogProbAlias += std::log(weights[i]);
     }
 
     // Normalize row-wise.
@@ -215,7 +215,7 @@ Estimate(const arma::mat& observations,
 
     // Calculate the new value of the means using the updated conditional
     // probabilities.
-    arma::vec logProbabilities = arma::log(probabilities);
+    arma::vec logProbabilities = log(probabilities);
     for (size_t i = 0; i < dists.size(); ++i)
     {
       // Calculate the sum of probabilities of points, which is the
@@ -229,7 +229,7 @@ Estimate(const arma::mat& observations,
       if (probRowSums[i] != -std::numeric_limits<double>::infinity())
       {
         dists[i].Mean() = observations *
-              arma::exp(condLogProb.col(i) + logProbabilities - probRowSums[i]);
+              exp(condLogProb.col(i) + logProbabilities - probRowSums[i]);
       }
       else
         continue;
@@ -240,11 +240,11 @@ Estimate(const arma::mat& observations,
 
       // If the distribution is DiagonalGaussianDistribution, calculate the
       // covariance only with diagonal components.
-      if (std::is_same<Distribution, DiagonalGaussianDistribution>::value)
+      if (std::is_same_v<Distribution, DiagonalGaussianDistribution<>>)
       {
-        arma::vec cov = arma::sum((tmp % tmp) %
-            (arma::ones<arma::vec>(observations.n_rows) *
-            trans(arma::exp(condLogProb.col(i) +
+        arma::vec cov = sum((tmp % tmp) %
+            (ones<arma::vec>(observations.n_rows) *
+            trans(exp(condLogProb.col(i) +
                             logProbabilities - probRowSums[i]))), 1);
 
         // Apply covariance constraint.
@@ -253,7 +253,7 @@ Estimate(const arma::mat& observations,
       }
       else
       {
-        arma::mat tmpB = tmp.each_row() % trans(arma::exp(condLogProb.col(i) +
+        arma::mat tmpB = tmp.each_row() % trans(exp(condLogProb.col(i) +
             logProbabilities - probRowSums[i]));
         arma::mat cov = (tmp * trans(tmpB));
 
@@ -265,7 +265,7 @@ Estimate(const arma::mat& observations,
 
     // Calculate the new values for omega using the updated conditional
     // probabilities.
-    weights = arma::exp(probRowSums - AccuLog(logProbabilities));
+    weights = exp(probRowSums - AccuLog(logProbabilities));
 
     // Update values of l; calculate new log-likelihood.
     lOld = l;
@@ -292,14 +292,14 @@ InitialClustering(const arma::mat& observations,
   // Check if the type of Distribution is DiagonalGaussianDistribution.  If so,
   // we can get faster performance by using diagonal elements when calculating
   // the covariance.
-  const bool isDiagGaussDist = std::is_same<Distribution,
-      DiagonalGaussianDistribution>::value;
+  const bool isDiagGaussDist = std::is_same_v<Distribution,
+      DiagonalGaussianDistribution<>>;
 
   std::vector<arma::vec> means(dists.size());
 
   // Conditional covariance instantiation.
-  std::vector<typename std::conditional<isDiagGaussDist,
-      arma::vec, arma::mat>::type> covs(dists.size());
+  std::vector<std::conditional_t<isDiagGaussDist, arma::vec, arma::mat>>
+      covs(dists.size());
 
   // Now calculate the means, covariances, and weights.
   weights.zeros();
@@ -386,7 +386,7 @@ LogLikelihood(const arma::mat& observations,
   for (size_t i = 0; i < dists.size(); ++i)
   {
     dists[i].LogProbability(observations, logPhis);
-    logLikelihoods.row(i) = log(weights(i)) + trans(logPhis);
+    logLikelihoods.row(i) = std::log(weights(i)) + trans(logPhis);
   }
   // Now sum over every point.
   for (size_t j = 0; j < observations.n_cols; ++j)
@@ -437,7 +437,7 @@ ArmadilloGMMWrapper(const arma::mat& observations,
   // Armadillo's implementation.  If mlpack ever changes k-means defaults to use
   // something that is reliably quicker than the Lloyd iteration k-means update,
   // then this code maybe should be revisited.
-  if (!std::is_same<InitialClusteringType, KMeans<>>::value || useInitialModel)
+  if (!std::is_same_v<InitialClusteringType, KMeans<>> || useInitialModel)
   {
     // Use clusterer to get initial values.
     if (!useInitialModel)

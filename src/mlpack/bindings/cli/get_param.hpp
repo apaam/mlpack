@@ -28,13 +28,13 @@ namespace cli {
 template<typename T>
 T& GetParam(
     util::ParamData& d,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<!data::HasSerialize<T>::value>::type* = 0,
-    const typename std::enable_if<!std::is_same<T,
-        std::tuple<mlpack::data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<!data::HasSerialize<T>::value>* = 0,
+    const std::enable_if_t<!std::is_same_v<T,
+        std::tuple<mlpack::data::DatasetInfo, arma::mat>>>* = 0)
 {
   // No mapping is needed, so just cast it directly.
-  return *MLPACK_ANY_CAST<T>(&d.value);
+  return *std::any_cast<T>(&d.value);
 }
 
 /**
@@ -45,14 +45,14 @@ T& GetParam(
 template<typename T>
 T& GetParam(
     util::ParamData& d,
-    const typename std::enable_if<arma::is_arma_type<T>::value>::type* = 0)
+    const std::enable_if_t<arma::is_arma_type<T>::value>* = 0)
 {
   // If the matrix is an input matrix, we have to load the matrix.  'value'
   // contains the filename.  It's possible we could load empty matrices many
   // times, but I am not bothered by that---it shouldn't be something that
   // happens.
-  typedef std::tuple<T, typename ParameterType<T>::type> TupleType;
-  TupleType& tuple = *MLPACK_ANY_CAST<TupleType>(&d.value);
+  using TupleType = std::tuple<T, typename ParameterType<T>::type>;
+  TupleType& tuple = *std::any_cast<TupleType>(&d.value);
   const std::string& value = std::get<0>(std::get<1>(tuple));
   T& matrix = std::get<0>(tuple);
   size_t& n_rows = std::get<1>(std::get<1>(tuple));
@@ -80,13 +80,13 @@ T& GetParam(
 template<typename T>
 T& GetParam(
     util::ParamData& d,
-    const typename std::enable_if<std::is_same<T,
-        std::tuple<mlpack::data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<std::is_same_v<T,
+        std::tuple<mlpack::data::DatasetInfo, arma::mat>>>* = 0)
 {
   // If this is an input parameter, we need to load both the matrix and the
   // dataset info.
-  typedef std::tuple<T, std::tuple<std::string, size_t, size_t>> TupleType;
-  TupleType* tuple = MLPACK_ANY_CAST<TupleType>(&d.value);
+  using TupleType = std::tuple<T, std::tuple<std::string, size_t, size_t>>;
+  TupleType* tuple = std::any_cast<TupleType>(&d.value);
   const std::string& value = std::get<0>(std::get<1>(*tuple));
   T& t = std::get<0>(*tuple);
   size_t& n_rows = std::get<1>(std::get<1>(*tuple));
@@ -110,13 +110,13 @@ T& GetParam(
 template<typename T>
 T*& GetParam(
     util::ParamData& d,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<data::HasSerialize<T>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<data::HasSerialize<T>::value>* = 0)
 {
   // If the model is an input model, we have to load it from file.  'value'
   // contains the filename.
-  typedef std::tuple<T*, std::string> TupleType;
-  TupleType* tuple = MLPACK_ANY_CAST<TupleType>(&d.value);
+  using TupleType = std::tuple<T*, std::string>;
+  TupleType* tuple = std::any_cast<TupleType>(&d.value);
   const std::string& value = std::get<1>(*tuple);
   if (d.input && !d.loaded)
   {
@@ -140,7 +140,7 @@ template<typename T>
 void GetParam(util::ParamData& d, const void* /* input */, void* output)
 {
   // Cast to the correct type.
-  *((T**) output) = &GetParam<typename std::remove_pointer<T>::type>(d);
+  *((T**) output) = &GetParam<std::remove_pointer_t<T>>(d);
 }
 
 } // namespace cli

@@ -29,15 +29,15 @@ template<typename T>
 void PrintInputProcessing(
     util::ParamData& d,
     const size_t indent,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<!data::HasSerialize<T>::value>::type* = 0,
-    const typename std::enable_if<!std::is_same<T,
-        std::tuple<data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<!data::HasSerialize<T>::value>* = 0,
+    const std::enable_if_t<!std::is_same_v<T,
+        std::tuple<data::DatasetInfo, arma::mat>>>* = 0)
 {
   const std::string prefix(indent, ' ');
 
   std::string def = "nil";
-  if (std::is_same<T, bool>::value)
+  if (std::is_same_v<T, bool>)
     def = "false";
 
   // Capitalize the first letter of parameter name so it is
@@ -67,22 +67,22 @@ void PrintInputProcessing(
     // Print out default value.
     if (d.cppType == "std::string")
     {
-      std::string value = MLPACK_ANY_CAST<std::string>(d.value);
+      std::string value = std::any_cast<std::string>(d.value);
       std::cout << "\"" << value << "\"";
     }
     else if (d.cppType == "double")
     {
-      double value = MLPACK_ANY_CAST<double>(d.value);
+      double value = std::any_cast<double>(d.value);
       std::cout << value;
     }
     else if (d.cppType == "int")
     {
-      int value = MLPACK_ANY_CAST<int>(d.value);
+      int value = std::any_cast<int>(d.value);
       std::cout << value;
     }
     else if (d.cppType == "bool")
     {
-      bool value = MLPACK_ANY_CAST<bool>(d.value);
+      bool value = std::any_cast<bool>(d.value);
       if (value == 0)
       std::cout << "false";
       else
@@ -131,7 +131,7 @@ template<typename T>
 void PrintInputProcessing(
     util::ParamData& d,
     const size_t indent,
-    const typename std::enable_if<arma::is_arma_type<T>::value>::type* = 0)
+    const std::enable_if_t<arma::is_arma_type<T>::value>* = 0)
 {
   const std::string prefix(indent, ' ');
 
@@ -206,8 +206,8 @@ template<typename T>
 void PrintInputProcessing(
     util::ParamData& d,
     const size_t indent,
-    const typename std::enable_if<std::is_same<T,
-        std::tuple<data::DatasetInfo, arma::mat>>::value>::type* = 0)
+    const std::enable_if_t<std::is_same_v<T,
+        std::tuple<data::DatasetInfo, arma::mat>>>* = 0)
 {
   const std::string prefix(indent, ' ');
 
@@ -268,8 +268,8 @@ template<typename T>
 void PrintInputProcessing(
     util::ParamData& d,
     const size_t indent,
-    const typename std::enable_if<!arma::is_arma_type<T>::value>::type* = 0,
-    const typename std::enable_if<data::HasSerialize<T>::value>::type* = 0)
+    const std::enable_if_t<!arma::is_arma_type<T>::value>* = 0,
+    const std::enable_if_t<data::HasSerialize<T>::value>* = 0)
 {
   // First, get the correct classparamName if needed.
   std::string goStrippedType, strippedType, printedType, defaultsType;
@@ -340,8 +340,7 @@ void PrintInputProcessing(util::ParamData& d,
                           const void* input,
                           void* /* output */)
 {
-  PrintInputProcessing<typename std::remove_pointer<T>::type>(d,
-      *((size_t*) input));
+  PrintInputProcessing<std::remove_pointer_t<T>>(d, *((size_t*) input));
 }
 
 } // namespace go

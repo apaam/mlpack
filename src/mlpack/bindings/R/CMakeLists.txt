@@ -403,7 +403,8 @@ macro (post_r_setup)
   # Collect all header and source files in the library.
   file(GLOB_RECURSE R_SRC_HPP_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" *.hpp)
   file(GLOB_RECURSE R_SRC_CPP_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" *.cpp)
-  set(R_SRC_FILES ${R_SRC_HPP_FILES} ${R_SRC_CPP_FILES})
+  file(GLOB_RECURSE R_SRC_H_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" *.h)
+  set(R_SRC_FILES ${R_SRC_HPP_FILES} ${R_SRC_CPP_FILES} ${R_SRC_H_FILES})
 
   # In case of R_Bindings we are copying all of these header to
   # <package>/src/cereal/ because the currently-packaged version
@@ -418,7 +419,7 @@ macro (post_r_setup)
   # First we have to create that directory though.
   execute_process(
     COMMAND ${CMAKE_COMMAND} -E
-      make_directory ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/mlpack
+      make_directory ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/mlpack
   )
 
   # Then copy each of the header and source files over to that directory.
@@ -432,9 +433,15 @@ macro (post_r_setup)
     execute_process(
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${mlpack_sources}
-        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/mlpack
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/mlpack
     )
   endforeach()
+
+  # Copy configured config.hpp.
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E copy
+      "${CMAKE_BINARY_DIR}/include/mlpack/config-local.hpp"
+      "${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/mlpack/config.hpp")
 
   foreach(r_src_file ${R_SRC_FILES})
     if ("${r_src_file}" MATCHES "methods/" OR
@@ -443,7 +450,7 @@ macro (post_r_setup)
       execute_process(
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
           ${CMAKE_CURRENT_SOURCE_DIR}/${r_src_file}
-          ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/mlpack/${r_src_file}
+          ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/mlpack/${r_src_file}
       )
 
       # Collect path of all source files and append to ${R_SRC}.
@@ -460,19 +467,37 @@ macro (post_r_setup)
     execute_process(
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CEREAL_INCLUDE_DIR}/${rcereal_src_file}
-        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/${rcereal_src_file}
+        ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/${rcereal_src_file}
     )
   endforeach()
 
   # Resolve gcc Warnings.
-  file(READ ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/cereal/external/base64.hpp CEREAL_BASE64)
+  file(READ ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/cereal/external/base64.hpp CEREAL_BASE64)
   string(REGEX REPLACE
       "\n#ifdef __GNUC__\n#pragma GCC diagnostic push\n#pragma GCC diagnostic ignored \"-Wconversion\"\n#endif\n"
       "" CEREAL_BASE64 "${CEREAL_BASE64}")
   string(REGEX REPLACE
       "#ifdef __GNUC__\n#pragma GCC diagnostic pop\n#endif"
       "" CEREAL_BASE64 "${CEREAL_BASE64}")
-  file(WRITE ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/src/cereal/external/base64.hpp "${CEREAL_BASE64}")
+  file(WRITE ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/cereal/external/base64.hpp "${CEREAL_BASE64}")
+
+  # Copy STB headers for inclusion in the package, if STB is used.
+  # NOTE: for CRAN, `sprintf` cannot be used; but it is used in
+  # `stb_image_write.h`, so we replace it with `snprintf` below.
+  if (StbImage_FOUND)
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -E
+        make_directory ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/stb
+    )
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${STB_IMAGE_INCLUDE_DIR}/stb_image.h
+            ${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/stb/stb_image.h)
+    file(READ "${STB_IMAGE_INCLUDE_DIR}/stb_image_write.h" STB_IMAGE_WRITE_H)
+    string(REGEX REPLACE "sprintf\\(buffer," "snprintf(buffer, 128,"
+        STB_IMAGE_WRITE_H_MOD "${STB_IMAGE_WRITE_H}")
+    file(WRITE "${CMAKE_BINARY_DIR}/src/mlpack/bindings/R/mlpack/inst/include/stb/stb_image_write.h" "${STB_IMAGE_WRITE_H_MOD}")
+  endif ()
 
   # Then configure 'mlpack.h.in' using ${R_SRC}.
   configure_file(

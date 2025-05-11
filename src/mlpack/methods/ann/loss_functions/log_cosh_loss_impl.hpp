@@ -16,6 +16,8 @@
 // In case it hasn't yet been included.
 #include "log_cosh_loss.hpp"
 
+#include <mlpack/core/util/log.hpp>
+
 namespace mlpack {
 
 template<typename MatType>
@@ -34,7 +36,7 @@ typename MatType::elem_type LogCoshLossType<MatType>::Forward(
     const MatType& target)
 {
   typename MatType::elem_type lossSum =
-      arma::accu(arma::log(arma::cosh(a * (target - prediction)))) / a;
+      accu(log(arma::cosh(a * (target - prediction)))) / a;
 
   if (reduction)
     return lossSum;

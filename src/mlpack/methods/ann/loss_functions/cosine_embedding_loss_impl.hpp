@@ -30,15 +30,15 @@ typename MatType::elem_type CosineEmbeddingLossType<MatType>::Forward(
     const MatType& prediction,
     const MatType& target)
 {
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
 
   const size_t cols = prediction.n_cols;
   const size_t batchSize = prediction.n_elem / cols;
   if (arma::size(prediction) != arma::size(target))
     Log::Fatal << "Input Tensors must have same dimensions." << std::endl;
 
-  arma::Col<ElemType> inputTemp1 = arma::vectorise(prediction);
-  arma::Col<ElemType> inputTemp2 = arma::vectorise(target);
+  arma::Col<ElemType> inputTemp1 = vectorise(prediction);
+  arma::Col<ElemType> inputTemp2 = vectorise(target);
   ElemType lossSum = 0.0;
 
   for (size_t i = 0; i < inputTemp1.n_elem; i += cols)
@@ -67,15 +67,15 @@ void CosineEmbeddingLossType<MatType>::Backward(
     const MatType& target,
     MatType& loss)
 {
-  typedef typename MatType::elem_type ElemType;
+  using ElemType = typename MatType::elem_type;
 
   const size_t cols = prediction.n_cols;
   const size_t batchSize = prediction.n_elem / cols;
   if (arma::size(prediction) != arma::size(target))
     Log::Fatal << "Input Tensors must have same dimensions." << std::endl;
 
-  arma::Col<ElemType> inputTemp1 = arma::vectorise(prediction);
-  arma::Col<ElemType> inputTemp2 = arma::vectorise(target);
+  arma::Col<ElemType> inputTemp1 = vectorise(prediction);
+  arma::Col<ElemType> inputTemp2 = vectorise(target);
   loss.set_size(arma::size(inputTemp1));
 
   arma::Col<ElemType> outputTemp(loss.memptr(), inputTemp1.n_elem,
@@ -91,9 +91,9 @@ void CosineEmbeddingLossType<MatType>::Backward(
     {
       const int multiplier = similarity ? 1 : -1;
       outputTemp(arma::span(i, i + cols -1)) = -1 * multiplier *
-          (arma::normalise(inputTemp2(arma::span(i, i + cols - 1))) -
-          cosDist * arma::normalise(inputTemp1(arma::span(i, i + cols -
-          1)))) / std::sqrt(arma::accu(arma::pow(inputTemp1(arma::span(i, i +
+          (normalise(inputTemp2(arma::span(i, i + cols - 1))) -
+          cosDist * normalise(inputTemp1(arma::span(i, i + cols -
+          1)))) / std::sqrt(accu(pow(inputTemp1(arma::span(i, i +
           cols - 1)), 2)));
     }
 
