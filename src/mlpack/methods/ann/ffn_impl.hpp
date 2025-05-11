@@ -232,7 +232,7 @@ void FFN<
   }
   
   // Perform the backward pass.
-  networkDelta.set_size(predictors.n_rows, batchSize);
+  networkDelta.set_size(predictors.n_rows, 1);
   network.Backward(networkOutput, error, gradients, networkDelta);
 }
 
